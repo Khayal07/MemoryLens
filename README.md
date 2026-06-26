@@ -45,6 +45,15 @@ docker compose up --build
 - Frontend: http://localhost:5173
 - Health: http://localhost:8000/health
 
+## Seed the catalog
+
+```bash
+docker compose exec api python -m scripts.ingest --all --source fixture
+```
+
+Then search at http://localhost:5173. See [ARCHITECTURE.md](ARCHITECTURE.md) for design.
+
 ## Status
 
-🚧 Phase 0 — Foundation (scaffold). See the full roadmap in the architecture plan.
+✅ Phases 0–8 complete: backend (RAG pipeline, auth, history), frontend SPA,
+observability, Docker, CI. Verified end-to-end.

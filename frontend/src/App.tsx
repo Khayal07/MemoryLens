@@ -1,20 +1,32 @@
-import { useEffect, useState } from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Layout from "./components/Layout";
+import Protected from "./components/Protected";
+import CategorySelect from "./pages/CategorySelect";
+import History from "./pages/History";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Search from "./pages/Search";
+
+const router = createBrowserRouter([
+  {
+    element: <Layout />,
+    children: [
+      { path: "/", element: <CategorySelect /> },
+      { path: "/search/:category", element: <Search /> },
+      { path: "/login", element: <Login /> },
+      { path: "/register", element: <Register /> },
+      {
+        path: "/history",
+        element: (
+          <Protected>
+            <History />
+          </Protected>
+        ),
+      },
+    ],
+  },
+]);
 
 export default function App() {
-  const [apiStatus, setApiStatus] = useState<string>("checking…");
-
-  useEffect(() => {
-    fetch("/api/v1/health")
-      .then((r) => r.json())
-      .then((d) => setApiStatus(d.status))
-      .catch(() => setApiStatus("unreachable"));
-  }, []);
-
-  return (
-    <main className="app">
-      <h1>MemoryLens</h1>
-      <p>Find things you only partially remember.</p>
-      <p className="status">API: {apiStatus}</p>
-    </main>
-  );
+  return <RouterProvider router={router} />;
 }

@@ -2,7 +2,14 @@
 result is the best match; the rest are alternatives. `suggestion` carries the soft
 category-mismatch nudge (never an automatic switch)."""
 
+from datetime import datetime
+
 from pydantic import BaseModel, Field
+
+
+class SearchRequest(BaseModel):
+    category: str
+    query: str = Field(min_length=3, max_length=1000)
 
 
 class ResultItem(BaseModel):
@@ -26,3 +33,11 @@ class SearchResponse(BaseModel):
     category: str
     results: list[ResultItem] = Field(default_factory=list)
     suggestion: MismatchSuggestion | None = None
+
+
+class SearchSummary(BaseModel):
+    id: int
+    category: str
+    query: str
+    created_at: datetime
+    result_count: int

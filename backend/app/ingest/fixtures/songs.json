@@ -1,50 +1,370 @@
 [
   {
-    "external_id": "mb:singing-in-the-rain",
+    "external_id": "song:singing-in-the-rain",
     "title": "Singin' in the Rain",
-    "description": "A joyful song and dance number about a man walking and dancing through a downpour, splashing in puddles while utterly in love.",
+    "description": "A joyful song about a man walking and dancing through a downpour, splashing in puddles, completely in love and not caring that he's soaked.",
     "image_url": null,
     "source_url": "https://musicbrainz.org/",
     "metadata": {"artist": "Gene Kelly", "year": 1952, "genre": "Showtune"}
   },
   {
-    "external_id": "mb:purple-rain",
+    "external_id": "song:purple-rain",
     "title": "Purple Rain",
-    "description": "A sweeping, emotional rock ballad with a man singing about love, loss and rain under a purple sky, building to a famous guitar solo.",
+    "description": "A sweeping emotional rock ballad about love, regret and forgiveness, with a man singing under a purple sky in the rain, building to a famous guitar solo.",
     "image_url": null,
     "source_url": "https://musicbrainz.org/",
     "metadata": {"artist": "Prince", "year": 1984, "genre": "Rock"}
   },
   {
-    "external_id": "mb:bohemian-rhapsody",
-    "title": "Bohemian Rhapsody",
-    "description": "An operatic rock epic shifting between ballad, opera and hard rock, telling a surreal story of a young man who has killed and faces judgment.",
-    "image_url": null,
-    "source_url": "https://musicbrainz.org/",
-    "metadata": {"artist": "Queen", "year": 1975, "genre": "Rock"}
-  },
-  {
-    "external_id": "mb:november-rain",
+    "external_id": "song:november-rain",
     "title": "November Rain",
-    "description": "A long power ballad about enduring love through hard times, with a man, rain imagery, orchestral strings and an extended guitar solo.",
+    "description": "A long orchestral power ballad about enduring love through hard times, with rain imagery, a wedding, and an extended guitar solo in the desert.",
     "image_url": null,
     "source_url": "https://musicbrainz.org/",
     "metadata": {"artist": "Guns N' Roses", "year": 1991, "genre": "Rock"}
   },
   {
-    "external_id": "mb:set-fire-to-the-rain",
+    "external_id": "song:set-fire-to-the-rain",
     "title": "Set Fire to the Rain",
-    "description": "A powerful breakup ballad where a woman sings about a turbulent love, with rain as a recurring metaphor for pain and release.",
+    "description": "A powerful breakup ballad where a woman sings about a turbulent love, with rain as a recurring metaphor for pain, anger and letting go.",
     "image_url": null,
     "source_url": "https://musicbrainz.org/",
     "metadata": {"artist": "Adele", "year": 2011, "genre": "Pop"}
   },
   {
-    "external_id": "mb:billie-jean",
+    "external_id": "song:have-you-ever-seen-the-rain",
+    "title": "Have You Ever Seen the Rain?",
+    "description": "A wistful rock song asking whether you've seen rain coming down on a sunny day, using the weather as a metaphor for trouble during good times.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Creedence Clearwater Revival", "year": 1971, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:bohemian-rhapsody",
+    "title": "Bohemian Rhapsody",
+    "description": "An operatic rock epic that shifts between ballad, opera and hard rock, telling a surreal story of a young man who confesses he has killed and faces judgement.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Queen", "year": 1975, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:billie-jean",
     "title": "Billie Jean",
-    "description": "A tense pop song with an iconic bassline about a man denying a woman's claim that he fathered her child.",
+    "description": "A tense pop song with an iconic bassline about a man denying a woman's claim that he is the father of her child.",
     "image_url": null,
     "source_url": "https://musicbrainz.org/",
     "metadata": {"artist": "Michael Jackson", "year": 1982, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:thriller",
+    "title": "Thriller",
+    "description": "A pop song about a horror-movie night with monsters, zombies and a creeping sense of dread, famous for its spoken vampire-voice ending.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Michael Jackson", "year": 1982, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:hotel-california",
+    "title": "Hotel California",
+    "description": "A haunting rock song about a traveler who checks into a luxurious hotel he can never leave, an allegory of excess from which you can check out but never escape.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Eagles", "year": 1976, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:stairway-to-heaven",
+    "title": "Stairway to Heaven",
+    "description": "An epic rock song that builds slowly from a gentle acoustic ballad to a thunderous climax, about a woman buying a stairway to heaven and the search for meaning.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Led Zeppelin", "year": 1971, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:imagine",
+    "title": "Imagine",
+    "description": "A gentle piano ballad imagining a peaceful world with no countries, no possessions and no reasons to fight, a hopeful anthem for unity.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "John Lennon", "year": 1971, "genre": "Soft Rock"}
+  },
+  {
+    "external_id": "song:yesterday",
+    "title": "Yesterday",
+    "description": "A melancholy ballad about longing for the past, when love was easy, sung by a man missing the way things used to be.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "The Beatles", "year": 1965, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:let-it-be",
+    "title": "Let It Be",
+    "description": "A comforting piano ballad about finding peace in times of trouble, with words of wisdom telling you to let it be.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "The Beatles", "year": 1970, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:hey-jude",
+    "title": "Hey Jude",
+    "description": "An uplifting song encouraging a sad friend to take a sad song and make it better, ending in a long communal na-na-na singalong.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "The Beatles", "year": 1968, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:like-a-rolling-stone",
+    "title": "Like a Rolling Stone",
+    "description": "A biting rock song addressed to a once-privileged woman who has lost everything and is now on her own with no direction home.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Bob Dylan", "year": 1965, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:smells-like-teen-spirit",
+    "title": "Smells Like Teen Spirit",
+    "description": "A loud, angry grunge anthem of teenage apathy and rebellion, with a quiet-loud guitar riff and mumbled, frustrated lyrics.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Nirvana", "year": 1991, "genre": "Grunge"}
+  },
+  {
+    "external_id": "song:wonderwall",
+    "title": "Wonderwall",
+    "description": "A wistful 90s britpop song about someone who might be the one who saves you, with strummed acoustic guitar and a longing chorus.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Oasis", "year": 1995, "genre": "Britpop"}
+  },
+  {
+    "external_id": "song:sweet-child-o-mine",
+    "title": "Sweet Child o' Mine",
+    "description": "A rock love song with a famous winding guitar intro, about a man whose lover reminds him of warm childhood memories.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Guns N' Roses", "year": 1987, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:every-breath-you-take",
+    "title": "Every Breath You Take",
+    "description": "A deceptively gentle song that sounds romantic but is really about obsessive surveillance, a man watching every move his former lover makes.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "The Police", "year": 1983, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:dancing-queen",
+    "title": "Dancing Queen",
+    "description": "A glittering disco song about a seventeen-year-old girl having the time of her life dancing, feeling the beat from the tambourine.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "ABBA", "year": 1976, "genre": "Disco"}
+  },
+  {
+    "external_id": "song:i-will-always-love-you",
+    "title": "I Will Always Love You",
+    "description": "A soaring breakup ballad where a woman leaves the man she loves but promises she will always love him, famous for its huge climactic note.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Whitney Houston", "year": 1992, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:my-heart-will-go-on",
+    "title": "My Heart Will Go On",
+    "description": "A romantic ballad from a famous shipwreck film about love surviving beyond death and distance, opening with a tin whistle melody.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Celine Dion", "year": 1997, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:rolling-in-the-deep",
+    "title": "Rolling in the Deep",
+    "description": "A fierce soulful breakup song about a scorned lover turning heartbreak into fire, vowing the betrayer will pay for what they did.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Adele", "year": 2010, "genre": "Soul"}
+  },
+  {
+    "external_id": "song:someone-like-you",
+    "title": "Someone Like You",
+    "description": "A bare piano ballad about showing up at an old lover's door after they've married someone else, wishing them well through tears.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Adele", "year": 2011, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:shape-of-you",
+    "title": "Shape of You",
+    "description": "A bouncy pop song about falling for someone at a bar and on the dance floor, drawn to the shape of them.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Ed Sheeran", "year": 2017, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:thinking-out-loud",
+    "title": "Thinking Out Loud",
+    "description": "A tender wedding-style love song about still loving someone when they're old and grey, with soulful guitar.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Ed Sheeran", "year": 2014, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:rocket-man",
+    "title": "Rocket Man",
+    "description": "A lonely song about an astronaut far from home, missing his family while drifting through space doing his job.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Elton John", "year": 1972, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:your-song",
+    "title": "Your Song",
+    "description": "A sweet, simple piano love song where a shy man offers a song as his gift, wishing he could put his feelings into words.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Elton John", "year": 1970, "genre": "Soft Rock"}
+  },
+  {
+    "external_id": "song:sweet-home-alabama",
+    "title": "Sweet Home Alabama",
+    "description": "A proud southern rock anthem about longing for a hometown in the American South, with a famous guitar riff.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Lynyrd Skynyrd", "year": 1974, "genre": "Southern Rock"}
+  },
+  {
+    "external_id": "song:take-me-home-country-roads",
+    "title": "Take Me Home, Country Roads",
+    "description": "A warm folk song about country roads carrying a traveler home to the West Virginia mountains where he belongs.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "John Denver", "year": 1971, "genre": "Folk"}
+  },
+  {
+    "external_id": "song:born-to-run",
+    "title": "Born to Run",
+    "description": "A roaring rock anthem about young lovers wanting to escape their dead-end town on the highway, driving toward a better life.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Bruce Springsteen", "year": 1975, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:summer-of-69",
+    "title": "Summer of '69",
+    "description": "A nostalgic rock song about a man looking back on the best summer of his youth, his first band and a teenage romance.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Bryan Adams", "year": 1984, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:dont-stop-believin",
+    "title": "Don't Stop Believin'",
+    "description": "An uplifting arena-rock anthem about a small-town girl and a city boy chasing their dreams, telling everyone to hold on to that feeling.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Journey", "year": 1981, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:africa",
+    "title": "Africa",
+    "description": "A lush soft-rock song with dreamy synths about longing for Africa, blessing the rains and a love bigger than the world.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Toto", "year": 1982, "genre": "Soft Rock"}
+  },
+  {
+    "external_id": "song:wish-you-were-here",
+    "title": "Wish You Were Here",
+    "description": "A melancholy acoustic rock song about absence and lost connection, wishing a distant friend were here instead of two lost souls in a fishbowl.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Pink Floyd", "year": 1975, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:comfortably-numb",
+    "title": "Comfortably Numb",
+    "description": "A dreamy, detached rock song about numbness and dissociation, with two famous soaring guitar solos.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Pink Floyd", "year": 1979, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:hallelujah",
+    "title": "Hallelujah",
+    "description": "A solemn, aching ballad weaving biblical imagery with broken love, building each verse to a quiet, sorrowful hallelujah.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Leonard Cohen", "year": 1984, "genre": "Folk"}
+  },
+  {
+    "external_id": "song:nothing-compares-2-u",
+    "title": "Nothing Compares 2 U",
+    "description": "A devastating breakup ballad about how nothing and no one compares to a lost love, sung over a single tear-streaked close-up.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Sinead O'Connor", "year": 1990, "genre": "Pop"}
+  },
+  {
+    "external_id": "song:tears-in-heaven",
+    "title": "Tears in Heaven",
+    "description": "A grieving acoustic ballad a father wrote after losing his young son, wondering if his child would know his name in heaven.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Eric Clapton", "year": 1992, "genre": "Soft Rock"}
+  },
+  {
+    "external_id": "song:losing-my-religion",
+    "title": "Losing My Religion",
+    "description": "A jangly mandolin-driven song about unspoken longing and self-doubt, a man agonizing over whether he's said too much or not enough.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "R.E.M.", "year": 1991, "genre": "Alternative Rock"}
+  },
+  {
+    "external_id": "song:creep",
+    "title": "Creep",
+    "description": "A self-loathing alternative rock song about feeling like an outsider, obsessing over someone too beautiful and special for him.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Radiohead", "year": 1992, "genre": "Alternative Rock"}
+  },
+  {
+    "external_id": "song:zombie",
+    "title": "Zombie",
+    "description": "A fierce protest rock song about the violence of war and conflict, mourning children lost while the fighting drags on in someone's head.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "The Cranberries", "year": 1994, "genre": "Alternative Rock"}
+  },
+  {
+    "external_id": "song:wind-of-change",
+    "title": "Wind of Change",
+    "description": "A whistled rock ballad about hope and political change sweeping across the world, a wind carrying a new era.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Scorpions", "year": 1990, "genre": "Rock"}
+  },
+  {
+    "external_id": "song:viva-la-vida",
+    "title": "Viva la Vida",
+    "description": "An orchestral pop-rock song narrated by a fallen king who once ruled the world and now hears the people's bells ringing for his end.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Coldplay", "year": 2008, "genre": "Pop Rock"}
+  },
+  {
+    "external_id": "song:fix-you",
+    "title": "Fix You",
+    "description": "A slow-building anthem about comforting someone through grief and failure, promising to try to fix them, ending in a soaring guitar swell.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Coldplay", "year": 2005, "genre": "Alternative Rock"}
+  },
+  {
+    "external_id": "song:bridge-over-troubled-water",
+    "title": "Bridge over Troubled Water",
+    "description": "A gospel-tinged ballad promising to be a comforting bridge for a friend in pain and hard times, building to a powerful finish.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Simon & Garfunkel", "year": 1970, "genre": "Folk Rock"}
   }
 ]

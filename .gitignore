@@ -34,3 +34,7 @@ Thumbs.db
 .cache/
 models/
 data/raw/
+
+# Local verification artifacts
+.playwright-mcp/
+*.png

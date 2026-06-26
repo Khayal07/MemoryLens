@@ -30,7 +30,10 @@ class RAWGAdapter:
                     LIST_URL,
                     params={
                         "key": self._key,
-                        "ordering": "-rating",
+                        # "-added" ≈ popularity (how many users added it), so we get the
+                        # iconic games people actually half-remember, not obscure
+                        # high-"rating" indies.
+                        "ordering": "-added",
                         "page_size": 40,
                         "page": page,
                     },

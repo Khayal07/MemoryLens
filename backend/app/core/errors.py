@@ -41,7 +41,10 @@ class RateLimitedError(AppError):
 
 
 def _envelope(status_code: int, code: str, message: str) -> JSONResponse:
-    return JSONResponse(status_code=status_code, content={"error": {"code": code, "message": message}})
+    return JSONResponse(
+        status_code=status_code,
+        content={"error": {"code": code, "message": message}},
+    )
 
 
 async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:

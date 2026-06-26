@@ -7,8 +7,11 @@ from app.api.v1.health import router as health_router
 from app.api.v1.search import router as search_router
 from app.core.config import get_settings
 from app.core.errors import AppError, app_error_handler
+from app.core.logging import configure_logging
+from app.core.middleware import RequestContextMiddleware
 
 settings = get_settings()
+configure_logging()
 
 app = FastAPI(
     title="MemoryLens API",
@@ -16,6 +19,7 @@ app = FastAPI(
     description="Find things you partially remember.",
 )
 
+app.add_middleware(RequestContextMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,

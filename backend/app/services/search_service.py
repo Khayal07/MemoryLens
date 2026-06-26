@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.ai.pipeline import get_pipeline
 from app.core.errors import NotFoundError
 from app.domain.categories import CATEGORY_KEYS
+from app.infra import cache
 from app.infra.models import Category, Search, SearchResult
 from app.schemas.search import SearchResponse
 
@@ -17,7 +18,12 @@ def run_search(
     if category_key not in CATEGORY_KEYS:
         raise NotFoundError(f"Unknown category '{category_key}'.")
 
-    response = get_pipeline().run(db, category_key, query)
+    response = cache.get_cached(category_key, query)
+    if response is None:
+        response = get_pipeline().run(db, category_key, query)
+        cache.set_cached(category_key, query, response)
+
+    # Always record the search so history reflects every request, cached or not.
     _persist(db, category_key, query, user_id, response)
     return response
 

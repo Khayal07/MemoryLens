@@ -6,7 +6,10 @@ from app.ai.reasoning import ReasoningParseError, parse_reasoning
 
 
 def test_parses_plain_json() -> None:
-    raw = '{"matches": [{"item_id": 1, "reason": "fits", "rating": 0.9}], "category_mismatch": null}'
+    raw = (
+        '{"matches": [{"item_id": 1, "reason": "fits", "rating": 0.9}],'
+        ' "category_mismatch": null}'
+    )
     result = parse_reasoning(raw)
     assert len(result.matches) == 1
     assert result.matches[0].item_id == 1

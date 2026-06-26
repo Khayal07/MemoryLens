@@ -1,0 +1,50 @@
+[
+  {
+    "external_id": "tmdb:1396",
+    "title": "Breaking Bad",
+    "description": "A high school chemistry teacher diagnosed with cancer turns to manufacturing methamphetamine to secure his family's future, descending into the criminal underworld.",
+    "image_url": "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+    "source_url": "https://www.themoviedb.org/tv/1396",
+    "metadata": {"first_air_year": 2008, "genres": ["Crime", "Drama"], "seasons": 5}
+  },
+  {
+    "external_id": "tmdb:1399",
+    "title": "Game of Thrones",
+    "description": "Noble families wage a brutal war for control of the Iron Throne while an ancient supernatural threat rises in the frozen north and dragons return to the world.",
+    "image_url": "https://image.tmdb.org/t/p/w500/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg",
+    "source_url": "https://www.themoviedb.org/tv/1399",
+    "metadata": {"first_air_year": 2011, "genres": ["Fantasy", "Drama"], "seasons": 8}
+  },
+  {
+    "external_id": "tmdb:66732",
+    "title": "Stranger Things",
+    "description": "In a small 1980s town, a group of kids confront supernatural forces and secret government experiments after one of their friends vanishes into a parallel dimension.",
+    "image_url": "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
+    "source_url": "https://www.themoviedb.org/tv/66732",
+    "metadata": {"first_air_year": 2016, "genres": ["Sci-Fi", "Horror"], "seasons": 4}
+  },
+  {
+    "external_id": "tmdb:1668",
+    "title": "Friends",
+    "description": "Six friends in their twenties and thirties navigate love, careers and life in New York City, spending much of their time in a Manhattan coffee house.",
+    "image_url": "https://image.tmdb.org/t/p/w500/f496cm9enuEsZkSPzCwnTESEK5s.jpg",
+    "source_url": "https://www.themoviedb.org/tv/1668",
+    "metadata": {"first_air_year": 1994, "genres": ["Comedy", "Romance"], "seasons": 10}
+  },
+  {
+    "external_id": "tmdb:60625",
+    "title": "Rick and Morty",
+    "description": "A cynical genius scientist drags his anxious grandson on absurd, dangerous adventures across infinite dimensions in this adult animated sci-fi comedy.",
+    "image_url": "https://image.tmdb.org/t/p/w500/gdIrmf2DdY5mgN6ycVP0XlzKzbE.jpg",
+    "source_url": "https://www.themoviedb.org/tv/60625",
+    "metadata": {"first_air_year": 2013, "genres": ["Animation", "Sci-Fi", "Comedy"], "seasons": 7}
+  },
+  {
+    "external_id": "tmdb:1431",
+    "title": "CSI: Crime Scene Investigation",
+    "description": "A team of forensic investigators in Las Vegas uses physical evidence to solve grisly murders, reconstructing crimes from the smallest traces.",
+    "image_url": "https://image.tmdb.org/t/p/w500/l8wMA4xPbpwHmDSwsWVO7nWNzVy.jpg",
+    "source_url": "https://www.themoviedb.org/tv/1431",
+    "metadata": {"first_air_year": 2000, "genres": ["Crime", "Drama"], "seasons": 15}
+  }
+]

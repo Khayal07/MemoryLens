@@ -1,0 +1,42 @@
+[
+  {
+    "external_id": "tmdb:3084",
+    "title": "Al Pacino",
+    "description": "An American actor renowned for intense portrayals of mafia and crime figures, including Michael Corleone in The Godfather and Tony Montana in Scarface.",
+    "image_url": "https://image.tmdb.org/t/p/w500/2dGBb1fOcNdzJfwkIxbBMSjFTNc.jpg",
+    "source_url": "https://www.themoviedb.org/person/3084",
+    "metadata": {"known_for": ["The Godfather", "Scarface", "Heat"], "roles": ["mafia", "crime"]}
+  },
+  {
+    "external_id": "tmdb:380",
+    "title": "Robert De Niro",
+    "description": "An American actor famous for playing gangsters and mobsters in films like Goodfellas, Casino and The Irishman, often collaborating with Martin Scorsese.",
+    "image_url": "https://image.tmdb.org/t/p/w500/cT8htcckIuyI1Lqwt1CvD02ynTh.jpg",
+    "source_url": "https://www.themoviedb.org/person/380",
+    "metadata": {"known_for": ["Goodfellas", "Taxi Driver", "Casino"], "roles": ["mafia", "crime"]}
+  },
+  {
+    "external_id": "tmdb:1158",
+    "title": "Joe Pesci",
+    "description": "An American actor known for explosive, often comedic-violent mobster roles in Goodfellas, Casino and The Irishman.",
+    "image_url": "https://image.tmdb.org/t/p/w500/kuLfh0XYXjZkPHGoYjMNZINbtZf.jpg",
+    "source_url": "https://www.themoviedb.org/person/1158",
+    "metadata": {"known_for": ["Goodfellas", "Casino", "Home Alone"], "roles": ["mafia", "crime"]}
+  },
+  {
+    "external_id": "tmdb:6193",
+    "title": "Leonardo DiCaprio",
+    "description": "An American actor and producer acclaimed for leading roles in Titanic, Inception, The Wolf of Wall Street and The Revenant.",
+    "image_url": "https://image.tmdb.org/t/p/w500/wo2hJpn04vbtmh0B9utCFdsQhxM.jpg",
+    "source_url": "https://www.themoviedb.org/person/6193",
+    "metadata": {"known_for": ["Titanic", "Inception", "The Revenant"], "roles": ["drama"]}
+  },
+  {
+    "external_id": "tmdb:1892",
+    "title": "Matt Damon",
+    "description": "An American actor and screenwriter known for the Bourne series, Good Will Hunting and The Martian.",
+    "image_url": "https://image.tmdb.org/t/p/w500/At3Jm5VnVYPNc9aQXkInTzgnFGc.jpg",
+    "source_url": "https://www.themoviedb.org/person/1892",
+    "metadata": {"known_for": ["The Bourne Identity", "Good Will Hunting", "The Martian"], "roles": ["action", "drama"]}
+  }
+]

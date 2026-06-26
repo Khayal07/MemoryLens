@@ -1,0 +1,50 @@
+[
+  {
+    "external_id": "ol:OL27448W",
+    "title": "The Hobbit",
+    "description": "A home-loving hobbit is swept into a quest with dwarves to reclaim a treasure guarded by a dragon, encountering trolls, elves and a riddling creature along the way.",
+    "image_url": null,
+    "source_url": "https://openlibrary.org/works/OL27448W",
+    "metadata": {"author": "J.R.R. Tolkien", "year": 1937, "genres": ["Fantasy"]}
+  },
+  {
+    "external_id": "ol:OL45883W",
+    "title": "A Game of Thrones",
+    "description": "In a brutal fantasy world of warring noble houses, dragons and an ancient threat beyond a great wall of ice, families scheme for control of a kingdom.",
+    "image_url": null,
+    "source_url": "https://openlibrary.org/works/OL45883W",
+    "metadata": {"author": "George R.R. Martin", "year": 1996, "genres": ["Fantasy"]}
+  },
+  {
+    "external_id": "ol:OL14933414W",
+    "title": "Eragon",
+    "description": "A farm boy discovers a dragon egg and becomes a Dragon Rider, training in magic and swordcraft to resist a tyrannical king in a sprawling fantasy land.",
+    "image_url": null,
+    "source_url": "https://openlibrary.org/works/OL14933414W",
+    "metadata": {"author": "Christopher Paolini", "year": 2002, "genres": ["Fantasy"]}
+  },
+  {
+    "external_id": "ol:OL262758W",
+    "title": "1984",
+    "description": "In a totalitarian surveillance state, a man secretly rebels against an all-seeing Party and its leader Big Brother, only to be crushed by the regime.",
+    "image_url": null,
+    "source_url": "https://openlibrary.org/works/OL262758W",
+    "metadata": {"author": "George Orwell", "year": 1949, "genres": ["Dystopian"]}
+  },
+  {
+    "external_id": "ol:OL82563W",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "description": "An orphaned boy discovers he is a wizard and attends a school of magic, where he uncovers the mystery of a powerful stone and his own dark past.",
+    "image_url": null,
+    "source_url": "https://openlibrary.org/works/OL82563W",
+    "metadata": {"author": "J.K. Rowling", "year": 1997, "genres": ["Fantasy"]}
+  },
+  {
+    "external_id": "ol:OL24364628W",
+    "title": "The Name of the Wind",
+    "description": "A gifted young man recounts his rise from orphaned street child to legendary arcanist and musician in a richly built fantasy world.",
+    "image_url": null,
+    "source_url": "https://openlibrary.org/works/OL24364628W",
+    "metadata": {"author": "Patrick Rothfuss", "year": 2007, "genres": ["Fantasy"]}
+  }
+]

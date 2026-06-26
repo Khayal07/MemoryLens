@@ -1,0 +1,66 @@
+[
+  {
+    "external_id": "tmdb:389",
+    "title": "12 Angry Men",
+    "description": "A dissenting juror in a murder trial slowly manages to convince the other eleven men, gathered in one room, to reconsider their guilty vote and question their own assumptions.",
+    "image_url": "https://image.tmdb.org/t/p/w500/ow3wq89wM8qd5X7hWKxiRfWSQyb.jpg",
+    "source_url": "https://www.themoviedb.org/movie/389",
+    "metadata": {"year": 1957, "genres": ["Drama"], "director": "Sidney Lumet"}
+  },
+  {
+    "external_id": "tmdb:27205",
+    "title": "Inception",
+    "description": "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into a target's subconscious across nested dream worlds.",
+    "image_url": "https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
+    "source_url": "https://www.themoviedb.org/movie/27205",
+    "metadata": {"year": 2010, "genres": ["Action", "Science Fiction"], "director": "Christopher Nolan"}
+  },
+  {
+    "external_id": "tmdb:550",
+    "title": "Fight Club",
+    "description": "An insomniac office worker and a soap maker form an underground fight club that evolves into something much more, blurring the line between reality and identity.",
+    "image_url": "https://image.tmdb.org/t/p/w500/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+    "source_url": "https://www.themoviedb.org/movie/550",
+    "metadata": {"year": 1999, "genres": ["Drama"], "director": "David Fincher"}
+  },
+  {
+    "external_id": "tmdb:680",
+    "title": "Pulp Fiction",
+    "description": "The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption told out of chronological order.",
+    "image_url": "https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
+    "source_url": "https://www.themoviedb.org/movie/680",
+    "metadata": {"year": 1994, "genres": ["Crime", "Thriller"], "director": "Quentin Tarantino"}
+  },
+  {
+    "external_id": "tmdb:13",
+    "title": "Forrest Gump",
+    "description": "A slow-witted but kind-hearted man from Alabama witnesses and unwittingly influences several defining historical events of the 20th century United States.",
+    "image_url": "https://image.tmdb.org/t/p/w500/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+    "source_url": "https://www.themoviedb.org/movie/13",
+    "metadata": {"year": 1994, "genres": ["Drama", "Romance"], "director": "Robert Zemeckis"}
+  },
+  {
+    "external_id": "tmdb:155",
+    "title": "The Dark Knight",
+    "description": "Batman faces the Joker, an anarchic criminal mastermind who plunges Gotham into chaos and forces the hero to confront the thin line between justice and vengeance.",
+    "image_url": "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
+    "source_url": "https://www.themoviedb.org/movie/155",
+    "metadata": {"year": 2008, "genres": ["Action", "Crime", "Drama"], "director": "Christopher Nolan"}
+  },
+  {
+    "external_id": "tmdb:11",
+    "title": "Star Wars",
+    "description": "A farm boy joins a band of rebels to rescue a princess and destroy a planet-killing space station, discovering an ancient mystical power along the way.",
+    "image_url": "https://image.tmdb.org/t/p/w500/6FfCtAuVAW8XJjZ7eWeLibRLWTw.jpg",
+    "source_url": "https://www.themoviedb.org/movie/11",
+    "metadata": {"year": 1977, "genres": ["Adventure", "Science Fiction"], "director": "George Lucas"}
+  },
+  {
+    "external_id": "tmdb:278",
+    "title": "The Shawshank Redemption",
+    "description": "A banker wrongly convicted of murder forms a lasting friendship in prison and quietly engineers his own redemption over two decades behind bars.",
+    "image_url": "https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
+    "source_url": "https://www.themoviedb.org/movie/278",
+    "metadata": {"year": 1994, "genres": ["Drama", "Crime"], "director": "Frank Darabont"}
+  }
+]

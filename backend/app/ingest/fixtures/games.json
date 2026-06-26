@@ -1,0 +1,50 @@
+[
+  {
+    "external_id": "rawg:zelda-botw",
+    "title": "The Legend of Zelda: Breath of the Wild",
+    "description": "An open-world adventure where a hero awakens from a long sleep to explore a vast kingdom, solve shrines and defeat an ancient evil to rescue a princess.",
+    "image_url": null,
+    "source_url": "https://rawg.io/games/the-legend-of-zelda-breath-of-the-wild",
+    "metadata": {"year": 2017, "platforms": ["Switch", "Wii U"], "genres": ["Adventure"]}
+  },
+  {
+    "external_id": "rawg:super-mario-bros",
+    "title": "Super Mario Bros.",
+    "description": "A side-scrolling platformer where a mustachioed plumber jumps across worlds, stomping enemies to rescue a princess from a spiked turtle king.",
+    "image_url": null,
+    "source_url": "https://rawg.io/games/super-mario-bros",
+    "metadata": {"year": 1985, "platforms": ["NES"], "genres": ["Platformer"]}
+  },
+  {
+    "external_id": "rawg:sonic",
+    "title": "Sonic the Hedgehog",
+    "description": "A fast-paced platformer starring a blue hedgehog who races through loops and zones collecting rings to stop an evil scientist.",
+    "image_url": null,
+    "source_url": "https://rawg.io/games/sonic-the-hedgehog",
+    "metadata": {"year": 1991, "platforms": ["Genesis"], "genres": ["Platformer"]}
+  },
+  {
+    "external_id": "rawg:cloud-ff7",
+    "title": "Final Fantasy VII",
+    "description": "A spiky-haired mercenary with a giant sword joins eco-warriors against a megacorporation, in a sweeping role-playing game about a legendary blond-haired antagonist.",
+    "image_url": null,
+    "source_url": "https://rawg.io/games/final-fantasy-vii",
+    "metadata": {"year": 1997, "platforms": ["PlayStation"], "genres": ["RPG"]}
+  },
+  {
+    "external_id": "rawg:minecraft",
+    "title": "Minecraft",
+    "description": "A sandbox game of mining blocks and building anything in a procedurally generated world, surviving monsters that appear at night.",
+    "image_url": null,
+    "source_url": "https://rawg.io/games/minecraft",
+    "metadata": {"year": 2011, "platforms": ["PC", "Console", "Mobile"], "genres": ["Sandbox"]}
+  },
+  {
+    "external_id": "rawg:witcher3",
+    "title": "The Witcher 3: Wild Hunt",
+    "description": "A white-haired monster hunter roams a war-torn open world taking contracts and searching for an adopted daughter pursued by a spectral cavalry.",
+    "image_url": null,
+    "source_url": "https://rawg.io/games/the-witcher-3-wild-hunt",
+    "metadata": {"year": 2015, "platforms": ["PC", "PlayStation", "Xbox"], "genres": ["RPG"]}
+  }
+]

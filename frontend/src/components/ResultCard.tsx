@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ResultItem } from "../lib/types";
 import ConfidenceMeter from "./ConfidenceMeter";
 
@@ -9,6 +10,8 @@ interface Props {
 }
 
 export default function ResultCard({ result, best, index, icon }: Props) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = result.image_url && !imageFailed;
   const tags = Object.entries(result.metadata)
     .filter(([, v]) => v !== null && v !== undefined && v !== "")
     .slice(0, 4);
@@ -18,8 +21,14 @@ export default function ResultCard({ result, best, index, icon }: Props) {
       className={`card${best ? " best" : ""}`}
       style={{ animationDelay: `${Math.min(index * 80, 400)}ms` }}
     >
-      {result.image_url ? (
-        <img className="poster" src={result.image_url} alt="" loading="lazy" />
+      {showImage ? (
+        <img
+          className="poster"
+          src={result.image_url!}
+          alt=""
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+        />
       ) : (
         <div className="poster placeholder" aria-hidden="true">
           {icon ?? "🎞"}

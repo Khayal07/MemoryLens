@@ -1,0 +1,50 @@
+[
+  {
+    "external_id": "mb:singing-in-the-rain",
+    "title": "Singin' in the Rain",
+    "description": "A joyful song and dance number about a man walking and dancing through a downpour, splashing in puddles while utterly in love.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Gene Kelly", "year": 1952, "genre": "Showtune"}
+  },
+  {
+    "external_id": "mb:purple-rain",
+    "title": "Purple Rain",
+    "description": "A sweeping, emotional rock ballad with a man singing about love, loss and rain under a purple sky, building to a famous guitar solo.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Prince", "year": 1984, "genre": "Rock"}
+  },
+  {
+    "external_id": "mb:bohemian-rhapsody",
+    "title": "Bohemian Rhapsody",
+    "description": "An operatic rock epic shifting between ballad, opera and hard rock, telling a surreal story of a young man who has killed and faces judgment.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Queen", "year": 1975, "genre": "Rock"}
+  },
+  {
+    "external_id": "mb:november-rain",
+    "title": "November Rain",
+    "description": "A long power ballad about enduring love through hard times, with a man, rain imagery, orchestral strings and an extended guitar solo.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Guns N' Roses", "year": 1991, "genre": "Rock"}
+  },
+  {
+    "external_id": "mb:set-fire-to-the-rain",
+    "title": "Set Fire to the Rain",
+    "description": "A powerful breakup ballad where a woman sings about a turbulent love, with rain as a recurring metaphor for pain and release.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Adele", "year": 2011, "genre": "Pop"}
+  },
+  {
+    "external_id": "mb:billie-jean",
+    "title": "Billie Jean",
+    "description": "A tense pop song with an iconic bassline about a man denying a woman's claim that he fathered her child.",
+    "image_url": null,
+    "source_url": "https://musicbrainz.org/",
+    "metadata": {"artist": "Michael Jackson", "year": 1982, "genre": "Pop"}
+  }
+]

@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     openrouter_model: str = "openrouter/free"
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
+    # Ingestion sources (optional — fixtures used when absent)
+    tmdb_api_key: str = ""
+    rawg_api_key: str = ""
+
     # Database
     database_url: str = "postgresql+psycopg://memorylens:memorylens@localhost:5432/memorylens"
 

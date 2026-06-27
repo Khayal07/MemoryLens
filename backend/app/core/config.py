@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     embedding_model: str = "BAAI/bge-small-en-v1.5"
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L6-v2"
 
+    # Retrieval tuning
+    rrf_vector_weight: float = 1.0
+    rrf_keyword_weight: float = 0.6
+    rerank_top_n: int = 12
+    hyde_enabled: bool = True
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

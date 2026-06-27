@@ -39,3 +39,25 @@ def test_result_sorted_descending() -> None:
     fused = reciprocal_rank_fusion([[1, 2, 3], [3, 2, 1]])
     scores = [s for _, s in fused]
     assert scores == sorted(scores, reverse=True)
+
+
+def test_weights_scale_each_list_contribution() -> None:
+    # Same id at the same rank in both lists; only weights differ.
+    base = dict(reciprocal_rank_fusion([[1], [2]]))
+    weighted = dict(reciprocal_rank_fusion([[1], [2]], weights=[2.0, 1.0]))
+    assert weighted[1] == base[1] * 2.0
+    assert weighted[2] == base[2]
+
+
+def test_heavier_list_wins_tie() -> None:
+    # 1 leads the heavy (vector) list, 2 leads the light (keyword) list.
+    fused = dict(reciprocal_rank_fusion([[1], [2]], weights=[1.5, 0.5]))
+    assert fused[1] > fused[2]
+
+
+def test_weights_length_mismatch_raises() -> None:
+    try:
+        reciprocal_rank_fusion([[1], [2]], weights=[1.0])
+    except ValueError:
+        return
+    raise AssertionError("expected ValueError on weights/lists length mismatch")

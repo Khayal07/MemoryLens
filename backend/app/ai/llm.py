@@ -28,6 +28,15 @@ class OpenRouterClient:
 
     def complete_json(self, system: str, user: str, temperature: float = 0.2) -> str:
         """Send a chat completion requesting a JSON object; return the raw content."""
+        return self._complete(system, user, temperature, json_object=True)
+
+    def complete_text(self, system: str, user: str, temperature: float = 0.3) -> str:
+        """Send a chat completion expecting free-form text (e.g. a HyDE passage)."""
+        return self._complete(system, user, temperature, json_object=False)
+
+    def _complete(
+        self, system: str, user: str, temperature: float, json_object: bool
+    ) -> str:
         if not self._api_key:
             raise LLMError("OPENROUTER_API_KEY is not set")
 
@@ -38,8 +47,9 @@ class OpenRouterClient:
                 {"role": "user", "content": user},
             ],
             "temperature": temperature,
-            "response_format": {"type": "json_object"},
         }
+        if json_object:
+            payload["response_format"] = {"type": "json_object"}
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "HTTP-Referer": "https://github.com/Khayal07/MemoryLens",

@@ -15,11 +15,13 @@ from sqlalchemy.orm import Session
 from app.ai.cleaning import clean_query, validate_query
 from app.ai.confidence import compute_confidence
 from app.ai.llm import LLMError, OpenRouterClient
+from app.ai.prompts import hyde
 from app.ai.prompts.reasoning import SYSTEM_PROMPT, build_user_prompt
 from app.ai.reasoning import LLMReasoning, ReasoningParseError, parse_reasoning
 from app.ai.reranker import get_reranker
 from app.ai.retriever import HybridRetriever
 from app.ai.types import Candidate
+from app.core.config import get_settings
 from app.domain.categories import CATEGORY_KEYS
 from app.infra.models import Category
 from app.schemas.search import MismatchSuggestion, ResultItem, SearchResponse
@@ -30,11 +32,14 @@ _REPAIR_HINT = "\n\nIMPORTANT: respond with ONLY valid JSON of the required shap
 
 
 class SearchPipeline:
-    def __init__(self, retriever, reranker, llm, rerank_top_n: int = 8) -> None:
+    def __init__(
+        self, retriever, reranker, llm, rerank_top_n: int = 12, hyde_enabled: bool = True
+    ) -> None:
         self.retriever = retriever
         self.reranker = reranker
         self.llm = llm
         self.rerank_top_n = rerank_top_n
+        self.hyde_enabled = hyde_enabled
 
     def run(
         self, db: Session, category_key: str, query: str, max_results: int = 5
@@ -43,7 +48,8 @@ class SearchPipeline:
         cleaned = clean_query(query)
         category = self._resolve_category(db, category_key)
 
-        candidates = self.retriever.search(db, category.id, cleaned, k=30)
+        embed_text = self._expand_query(category, cleaned)
+        candidates = self.retriever.search(db, category.id, cleaned, k=30, embed_text=embed_text)
         if not candidates:
             return SearchResponse(query=query, category=category_key, results=[])
 
@@ -53,6 +59,23 @@ class SearchPipeline:
         return SearchResponse(
             query=query, category=category_key, results=results, suggestion=suggestion
         )
+
+    def _expand_query(self, category: Category, query: str) -> str:
+        """HyDE: ask the LLM for a hypothetical catalog description and append it to the
+        query for the semantic leg. Best-effort — on any failure fall back to the query
+        alone so retrieval never depends on the network."""
+        if not self.hyde_enabled:
+            return query
+        try:
+            system = hyde.SYSTEM_PROMPT.format(category=category.display_name)
+            user = hyde.build_user_prompt(category.display_name, query)
+            hypothesis = self.llm.complete_text(system, user).strip()
+        except LLMError as exc:
+            log.warning("pipeline.hyde_failed", error=str(exc))
+            return query
+        if not hypothesis:
+            return query
+        return f"{query}\n{hypothesis}"
 
     def _resolve_category(self, db: Session, category_key: str) -> Category:
         category = db.execute(
@@ -152,4 +175,11 @@ class SearchPipeline:
 @lru_cache
 def get_pipeline() -> SearchPipeline:
     """Build the default pipeline. Heavy local models load on first construction."""
-    return SearchPipeline(HybridRetriever(), get_reranker(), OpenRouterClient())
+    settings = get_settings()
+    return SearchPipeline(
+        HybridRetriever(),
+        get_reranker(),
+        OpenRouterClient(),
+        rerank_top_n=settings.rerank_top_n,
+        hyde_enabled=settings.hyde_enabled,
+    )

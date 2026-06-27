@@ -2,12 +2,14 @@
 fused with RRF. Both legs are hard-filtered by category, so a Movies search never
 touches Song rows. Returns category-grounded candidates — no hallucinated titles."""
 
-from sqlalchemy import func, select
+from sqlalchemy import Text, cast, func, select
+from sqlalchemy.dialects.postgresql import TSQUERY
 from sqlalchemy.orm import Session
 
 from app.ai.embedder import get_embedder
 from app.ai.fusion import reciprocal_rank_fusion
 from app.ai.types import Candidate
+from app.core.config import get_settings
 from app.infra.models import Item, ItemEmbedding
 
 
@@ -16,17 +18,27 @@ class HybridRetriever:
         self.embedder = get_embedder()
         self.top_vector = top_vector
         self.top_keyword = top_keyword
+        settings = get_settings()
+        self.weights = [settings.rrf_vector_weight, settings.rrf_keyword_weight]
 
     def search(
-        self, db: Session, category_id: int, query: str, k: int = 30
+        self,
+        db: Session,
+        category_id: int,
+        query: str,
+        k: int = 30,
+        embed_text: str | None = None,
     ) -> list[Candidate]:
-        query_vec = self.embedder.embed_query(query)
+        # `embed_text` lets HyDE feed an expanded text to the semantic leg while the
+        # keyword leg keeps the user's literal terms.
+        query_vec = self.embedder.embed_query(embed_text or query)
         vector_hits = self._vector_search(db, category_id, query_vec)
         keyword_hits = self._keyword_search(db, category_id, query)
 
         row_map: dict[int, Item] = {item.id: item for item, _ in [*vector_hits, *keyword_hits]}
         fused = reciprocal_rank_fusion(
-            [[item.id for item, _ in vector_hits], [item.id for item, _ in keyword_hits]]
+            [[item.id for item, _ in vector_hits], [item.id for item, _ in keyword_hits]],
+            weights=self.weights,
         )
 
         candidates: list[Candidate] = []
@@ -61,7 +73,13 @@ class HybridRetriever:
     def _keyword_search(
         self, db: Session, category_id: int, query: str
     ) -> list[tuple[Item, float]]:
-        tsquery = func.plainto_tsquery("english", query)
+        # plainto_tsquery ANDs every term, which a long fuzzy memory almost never
+        # satisfies. Reuse its stemming/stopword handling but OR the lexemes so any
+        # matching clue surfaces a candidate (ts_rank still rewards more overlap).
+        tsquery = cast(
+            func.replace(cast(func.plainto_tsquery("english", query), Text), "&", "|"),
+            TSQUERY,
+        )
         rank = func.ts_rank(ItemEmbedding.search_tsv, tsquery).label("rank")
         rows = db.execute(
             select(Item, rank)

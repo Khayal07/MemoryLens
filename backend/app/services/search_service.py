@@ -38,6 +38,10 @@ def _persist(
     db.add(search)
     db.flush()
     for rank, result in enumerate(response.results):
+        # Free-form (LLM-identified) answers have no catalog item to reference — the
+        # item_id FK would fail — so record only the grounded results in history.
+        if not result.item_id:
+            continue
         db.add(
             SearchResult(
                 search_id=search.id,

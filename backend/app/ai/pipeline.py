@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.ai.cleaning import clean_query, validate_query
 from app.ai.confidence import compute_confidence
-from app.ai.llm import LLMError, OpenRouterClient
+from app.ai.llm import LLMClient, LLMError
 from app.ai.prompts import hyde
 from app.ai.prompts.reasoning import SYSTEM_PROMPT, build_user_prompt
 from app.ai.reasoning import LLMReasoning, ReasoningParseError, parse_reasoning
@@ -179,7 +179,7 @@ def get_pipeline() -> SearchPipeline:
     return SearchPipeline(
         HybridRetriever(),
         get_reranker(),
-        OpenRouterClient(),
+        LLMClient(),
         rerank_top_n=settings.rerank_top_n,
         hyde_enabled=settings.hyde_enabled,
     )

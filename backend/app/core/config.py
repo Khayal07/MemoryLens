@@ -11,10 +11,18 @@ class Settings(BaseSettings):
     env: str = "development"
     cors_origins: str = "http://localhost:5173"
 
-    # OpenRouter (LLM reasoning)
+    # OpenAI (primary LLM reasoning)
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4.1-nano"
+    openai_base_url: str = "https://api.openai.com/v1"
+
+    # OpenRouter (fallback LLM reasoning)
     openrouter_api_key: str = ""
     openrouter_model: str = "openrouter/free"
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
+
+    # LLM provider chain: fall back to OpenRouter if OpenAI fails/runs out
+    llm_fallback_enabled: bool = True
 
     # Ingestion sources (optional — fixtures used when absent)
     tmdb_api_key: str = ""
@@ -39,7 +47,7 @@ class Settings(BaseSettings):
     rrf_vector_weight: float = 1.0
     rrf_keyword_weight: float = 0.6
     rerank_top_n: int = 12
-    hyde_enabled: bool = True
+    hyde_enabled: bool = False
 
     @property
     def cors_origin_list(self) -> list[str]:

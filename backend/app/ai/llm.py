@@ -1,6 +1,11 @@
-"""OpenRouter chat client. Provider-agnostic: the model id comes from the env, so
-swapping models needs no code change. Only this final reasoning step calls the
-network — embeddings and reranking are local."""
+"""LLM chat client. Provider-agnostic and OpenAI-compatible (/chat/completions).
+
+Tries providers in order (OpenAI primary, OpenRouter fallback), so if OpenAI
+credit runs out or errors, search keeps working on the free model. Model ids come
+from env — swapping models needs no code change. Only this final reasoning step
+calls the network; embeddings and reranking are local."""
+
+from dataclasses import dataclass
 
 import httpx
 import structlog
@@ -14,17 +19,41 @@ class LLMError(RuntimeError):
     pass
 
 
-class OpenRouterClient:
-    def __init__(
-        self,
-        api_key: str | None = None,
-        model: str | None = None,
-        base_url: str | None = None,
-    ) -> None:
+@dataclass(frozen=True)
+class _Provider:
+    name: str
+    api_key: str
+    model: str
+    base_url: str
+
+
+class LLMClient:
+    def __init__(self, providers: list[_Provider] | None = None) -> None:
+        self._providers = providers if providers is not None else self._build_providers()
+
+    @staticmethod
+    def _build_providers() -> list[_Provider]:
         settings = get_settings()
-        self._api_key = api_key or settings.openrouter_api_key
-        self._model = model or settings.openrouter_model
-        self._base_url = (base_url or settings.openrouter_base_url).rstrip("/")
+        providers: list[_Provider] = []
+        if settings.openai_api_key:
+            providers.append(
+                _Provider(
+                    "openai",
+                    settings.openai_api_key,
+                    settings.openai_model,
+                    settings.openai_base_url.rstrip("/"),
+                )
+            )
+        if settings.openrouter_api_key and (settings.llm_fallback_enabled or not providers):
+            providers.append(
+                _Provider(
+                    "openrouter",
+                    settings.openrouter_api_key,
+                    settings.openrouter_model,
+                    settings.openrouter_base_url.rstrip("/"),
+                )
+            )
+        return providers
 
     def complete_json(self, system: str, user: str, temperature: float = 0.2) -> str:
         """Send a chat completion requesting a JSON object; return the raw content."""
@@ -37,11 +66,28 @@ class OpenRouterClient:
     def _complete(
         self, system: str, user: str, temperature: float, json_object: bool
     ) -> str:
-        if not self._api_key:
-            raise LLMError("OPENROUTER_API_KEY is not set")
+        if not self._providers:
+            raise LLMError("No LLM provider configured (set OPENAI_API_KEY or OPENROUTER_API_KEY)")
 
+        last_error: Exception | None = None
+        for provider in self._providers:
+            try:
+                return self._call(provider, system, user, temperature, json_object)
+            except LLMError as exc:
+                last_error = exc
+                log.warning("llm.provider_failed", provider=provider.name, error=str(exc))
+        raise LLMError(f"All LLM providers failed: {last_error}")
+
+    @staticmethod
+    def _call(
+        provider: _Provider,
+        system: str,
+        user: str,
+        temperature: float,
+        json_object: bool,
+    ) -> str:
         payload = {
-            "model": self._model,
+            "model": provider.model,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -51,20 +97,24 @@ class OpenRouterClient:
         if json_object:
             payload["response_format"] = {"type": "json_object"}
         headers = {
-            "Authorization": f"Bearer {self._api_key}",
+            "Authorization": f"Bearer {provider.api_key}",
             "HTTP-Referer": "https://github.com/Khayal07/MemoryLens",
             "X-Title": "MemoryLens",
         }
         try:
             with httpx.Client(timeout=60.0) as client:
                 resp = client.post(
-                    f"{self._base_url}/chat/completions", json=payload, headers=headers
+                    f"{provider.base_url}/chat/completions", json=payload, headers=headers
                 )
                 resp.raise_for_status()
                 data = resp.json()
+            log.info("llm.completed", provider=provider.name, model=provider.model)
             return data["choices"][0]["message"]["content"]
         except httpx.HTTPError as exc:
-            log.error("llm.http_error", error=str(exc))
-            raise LLMError(f"OpenRouter request failed: {exc}") from exc
+            raise LLMError(f"{provider.name} request failed: {exc}") from exc
         except (KeyError, IndexError) as exc:
-            raise LLMError(f"Unexpected OpenRouter response shape: {exc}") from exc
+            raise LLMError(f"Unexpected {provider.name} response shape: {exc}") from exc
+
+
+# Backwards-compatible alias
+OpenRouterClient = LLMClient

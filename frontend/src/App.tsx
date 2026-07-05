@@ -10,6 +10,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const History = lazy(() => import("./pages/History"));
 const Collections = lazy(() => import("./pages/Collections"));
+const SharedResult = lazy(() => import("./pages/SharedResult"));
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
       { path: "/search/:category", element: <Search /> },
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
+      { path: "/s/:token", element: <SharedResult /> },
       {
         path: "/history",
         element: (

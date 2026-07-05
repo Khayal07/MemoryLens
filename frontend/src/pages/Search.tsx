@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import MismatchBanner from "../components/MismatchBanner";
 import ResultCard from "../components/ResultCard";
 import SimilarItems from "../components/SimilarItems";
+import ShareButton from "../components/ShareButton";
 import Button from "../components/ui/Button";
 import EmptyState from "../components/ui/EmptyState";
 import Eyebrow from "../components/ui/Eyebrow";
@@ -145,8 +146,9 @@ export default function Search() {
 
       {response && response.results.length > 0 && (
         <div key={response.query}>
-          <div className="mb-4 mt-8">
+          <div className="mb-4 mt-8 flex items-center justify-between gap-3">
             <Eyebrow>Best match</Eyebrow>
+            <ShareButton searchId={response.search_id} />
           </div>
           <m.div variants={stagger()} initial="hidden" animate="show">
             <ResultCard

@@ -125,6 +125,11 @@ class Search(Base):
     )
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"), index=True)
     raw_query: Mapped[str] = mapped_column(Text)
+    # Public share: token minted on demand + a snapshot of the full response so the
+    # shared page renders faithfully (including the free-form hero, absent from
+    # search_results).
+    share_token: Mapped[str | None] = mapped_column(String(22), unique=True, index=True)
+    response_json: Mapped[dict | None] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

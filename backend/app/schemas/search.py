@@ -44,3 +44,7 @@ class SearchSummary(BaseModel):
     query: str
     created_at: datetime
     result_count: int
+
+
+class ShareResponse(BaseModel):
+    token: str

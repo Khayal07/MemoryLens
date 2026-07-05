@@ -9,8 +9,13 @@ from app.core.errors import ValidationError
 from app.core.rate_limit import rate_limiter
 from app.infra.db import get_db
 from app.infra.models import User
-from app.schemas.search import SearchRequest, SearchResponse, SearchSummary
-from app.services import search_service
+from app.schemas.search import (
+    SearchRequest,
+    SearchResponse,
+    SearchSummary,
+    ShareResponse,
+)
+from app.services import search_service, share_service
 
 router = APIRouter()
 
@@ -40,3 +45,17 @@ def history(
 ) -> list[SearchSummary]:
     rows = search_service.list_history(db, user.id)
     return [SearchSummary(**row) for row in rows]
+
+
+@router.post("/searches/{search_id}/share", response_model=ShareResponse)
+def share_search(
+    search_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> ShareResponse:
+    return ShareResponse(token=share_service.create_share(db, search_id, user.id))
+
+
+@router.get("/share/{token}", response_model=SearchResponse)
+def shared_search(token: str, db: Session = Depends(get_db)) -> SearchResponse:
+    return share_service.get_shared(db, token)

@@ -39,7 +39,10 @@ def _persist(
     ).scalar_one()
     search = Search(user_id=user_id, category_id=category_id, raw_query=query)
     db.add(search)
-    db.flush()
+    db.flush()  # assign search.id before snapshotting/linking rows
+    response.search_id = search.id
+    # Snapshot the full response (incl. the free-form hero) for faithful sharing.
+    search.response_json = response.model_dump()
     for rank, result in enumerate(response.results):
         # Free-form (LLM-identified) answers have no catalog item to reference — the
         # item_id FK would fail — so record only the grounded results in history.

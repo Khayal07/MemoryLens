@@ -108,4 +108,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ search_id: searchId, item_id: itemId, vote }),
     }),
+
+  createShare: (searchId: number) =>
+    request<{ token: string }>(`/searches/${searchId}/share`, { method: "POST" }),
+
+  getShared: (token: string) => request<SearchResponse>(`/share/${token}`),
 };

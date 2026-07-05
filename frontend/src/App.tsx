@@ -1,11 +1,14 @@
+import { lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/Layout";
 import Protected from "./components/Protected";
-import CategorySelect from "./pages/CategorySelect";
-import History from "./pages/History";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Search from "./pages/Search";
+
+// Route-level code splitting — each page ships in its own chunk.
+const CategorySelect = lazy(() => import("./pages/CategorySelect"));
+const Search = lazy(() => import("./pages/Search"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const History = lazy(() => import("./pages/History"));
 
 const router = createBrowserRouter([
   {

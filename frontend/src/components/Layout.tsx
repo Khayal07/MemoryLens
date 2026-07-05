@@ -1,7 +1,9 @@
 import { AnimatePresence, m } from "framer-motion";
+import { Suspense } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
 import PageTransition from "./motion/PageTransition";
+import Spinner from "./ui/Spinner";
 import { spring } from "./motion/variants";
 
 const navLink =
@@ -74,11 +76,19 @@ export default function Layout() {
 
       <main id="main" className="flex-1 py-12 md:py-12">
         <div className="mx-auto max-w-[920px] px-6">
-          <AnimatePresence mode="wait">
-            <PageTransition key={location.pathname}>
-              <Outlet />
-            </PageTransition>
-          </AnimatePresence>
+          <Suspense
+            fallback={
+              <div className="flex justify-center py-16 text-muted">
+                <Spinner />
+              </div>
+            }
+          >
+            <AnimatePresence mode="wait">
+              <PageTransition key={location.pathname}>
+                <Outlet />
+              </PageTransition>
+            </AnimatePresence>
+          </Suspense>
         </div>
       </main>
     </div>

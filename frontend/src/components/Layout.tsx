@@ -55,6 +55,9 @@ export default function Layout() {
                 <Link to="/history" className={navLink}>
                   History
                 </Link>
+                <Link to="/analytics" className={navLink}>
+                  Analytics
+                </Link>
                 <button
                   className={navLink}
                   onClick={() => {

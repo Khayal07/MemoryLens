@@ -72,3 +72,20 @@ export interface User {
   id: number;
   email: string;
 }
+
+export interface LabelCount {
+  label: string;
+  count: number;
+}
+
+export interface AnalyticsOverview {
+  total_searches: number;
+  searches_last_7d: number;
+  avg_confidence: number;
+  grounded_searches: number;
+  freeform_only_searches: number;
+  upvotes: number;
+  downvotes: number;
+  by_category: LabelCount[];
+  top_queries: LabelCount[];
+}

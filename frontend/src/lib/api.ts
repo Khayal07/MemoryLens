@@ -1,4 +1,5 @@
 import type {
+  AnalyticsOverview,
   Category,
   Collection,
   SearchResponse,
@@ -113,4 +114,6 @@ export const api = {
     request<{ token: string }>(`/searches/${searchId}/share`, { method: "POST" }),
 
   getShared: (token: string) => request<SearchResponse>(`/share/${token}`),
+
+  analytics: () => request<AnalyticsOverview>("/analytics"),
 };

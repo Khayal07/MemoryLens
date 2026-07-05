@@ -11,6 +11,7 @@ const Register = lazy(() => import("./pages/Register"));
 const History = lazy(() => import("./pages/History"));
 const Collections = lazy(() => import("./pages/Collections"));
 const SharedResult = lazy(() => import("./pages/SharedResult"));
+const Analytics = lazy(() => import("./pages/Analytics"));
 
 const router = createBrowserRouter([
   {
@@ -34,6 +35,14 @@ const router = createBrowserRouter([
         element: (
           <Protected>
             <Collections />
+          </Protected>
+        ),
+      },
+      {
+        path: "/analytics",
+        element: (
+          <Protected>
+            <Analytics />
           </Protected>
         ),
       },

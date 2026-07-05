@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.analytics import router as analytics_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.categories import router as categories_router
 from app.api.v1.collections import router as collections_router
@@ -40,3 +41,4 @@ app.include_router(search_router, prefix="/api/v1", tags=["search"])
 app.include_router(items_router, prefix="/api/v1", tags=["items"])
 app.include_router(collections_router, prefix="/api/v1", tags=["collections"])
 app.include_router(feedback_router, prefix="/api/v1", tags=["feedback"])
+app.include_router(analytics_router, prefix="/api/v1", tags=["analytics"])

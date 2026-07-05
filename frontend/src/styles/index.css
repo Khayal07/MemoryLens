@@ -354,6 +354,12 @@ button {
   gap: 10px;
 }
 
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
 @keyframes develop {
   from {
     opacity: 0;
@@ -369,22 +375,51 @@ button {
 
 .card {
   display: grid;
-  grid-template-columns: 92px 1fr;
-  gap: 18px;
-  padding: 18px;
+  grid-template-columns: 84px 1fr;
+  gap: 16px;
+  padding: 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--raised);
-  margin-bottom: 14px;
   animation: develop 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
 }
+.card-body {
+  min-width: 0;
+}
+
+/* ---- hero (best match) ---- */
 .card.best {
+  grid-template-columns: 148px 1fr;
+  gap: 26px;
+  padding: 26px;
+  margin-bottom: 4px;
+  align-items: center;
   border-color: rgba(124, 107, 245, 0.4);
+  background: linear-gradient(180deg, rgba(124, 107, 245, 0.06), var(--raised));
   box-shadow: 0 0 0 1px rgba(124, 107, 245, 0.18), 0 24px 50px -34px rgba(124, 107, 245, 0.7);
 }
+.card.best .poster,
+.card.best .poster.placeholder,
+.card.best .ai-placeholder {
+  width: 148px;
+  height: 214px;
+  border-radius: 12px;
+}
+.card.best .card-title {
+  font-size: 1.6rem;
+  margin-top: 12px;
+}
+
+/* amber-tinted hero when the answer came from AI knowledge, not the catalog */
+.card.best.ai {
+  border-color: rgba(245, 180, 104, 0.4);
+  background: linear-gradient(180deg, rgba(245, 180, 104, 0.07), var(--raised));
+  box-shadow: 0 0 0 1px rgba(245, 180, 104, 0.2), 0 24px 50px -34px rgba(245, 180, 104, 0.55);
+}
+
 .poster {
-  width: 92px;
-  height: 132px;
+  width: 84px;
+  height: 120px;
   border-radius: 10px;
   object-fit: cover;
   background: var(--raised-2);
@@ -397,12 +432,55 @@ button {
   font-size: 1.8rem;
   color: var(--faint);
 }
+
+/* ---- gpt-knowledge: no poster, an aperture placeholder + badge ---- */
+.ai-placeholder {
+  width: 84px;
+  height: 120px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 180, 104, 0.3);
+  background: radial-gradient(circle at 50% 40%, rgba(245, 180, 104, 0.14), var(--raised-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ai-lens {
+  width: 44%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid var(--amber);
+  box-shadow: 0 0 0 3px rgba(245, 180, 104, 0.15);
+  position: relative;
+}
+.ai-lens::after {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--amber), var(--violet));
+}
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber);
+  border: 1px solid rgba(245, 180, 104, 0.4);
+  background: rgba(245, 180, 104, 0.1);
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-bottom: 12px;
+}
+
 .card-title {
   font-family: var(--display);
   font-weight: 600;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   letter-spacing: -0.01em;
-  margin: 2px 0 6px;
+  margin: 8px 0 6px;
 }
 .reason {
   color: var(--ink);
@@ -468,6 +546,44 @@ button {
   font-weight: 700;
   min-width: 48px;
   text-align: right;
+}
+
+/* ---------- confidence aperture dial (hero only) ---------- */
+.dial {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+.dial-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 8;
+}
+.dial-fill {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.dial-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.dial-pct {
+  font-family: var(--mono);
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.dial-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  color: var(--faint);
 }
 
 /* ---------- mismatch banner ---------- */
@@ -604,18 +720,37 @@ button {
   .main {
     padding: 32px 0 72px;
   }
+  .card.best {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: 18px;
+  }
+  .card.best .card-body {
+    width: 100%;
+  }
+  .card.best .dial {
+    margin: 0 auto;
+  }
 }
 @media (max-width: 480px) {
   .grid {
+    grid-template-columns: 1fr;
+  }
+  .results-grid {
     grid-template-columns: 1fr;
   }
   .card {
     grid-template-columns: 64px 1fr;
     gap: 12px;
   }
-  .poster {
+  .poster,
+  .ai-placeholder {
     width: 64px;
     height: 92px;
+  }
+  .card.best {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -623,7 +758,8 @@ button {
   .card {
     animation: none;
   }
-  .focus-fill {
+  .focus-fill,
+  .dial-fill {
     transition: none;
   }
   .skeleton {

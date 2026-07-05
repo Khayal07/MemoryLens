@@ -130,9 +130,11 @@ export default function Search() {
               <div className="results-label">
                 <span className="eyebrow">Other possibilities</span>
               </div>
-              {response.results.slice(1).map((r, i) => (
-                <ResultCard key={r.item_id} result={r} index={i + 1} icon={current?.icon} />
-              ))}
+              <div className="results-grid">
+                {response.results.slice(1).map((r, i) => (
+                  <ResultCard key={`${r.item_id}-${i}`} result={r} index={i + 1} icon={current?.icon} />
+                ))}
+              </div>
             </>
           )}
         </>

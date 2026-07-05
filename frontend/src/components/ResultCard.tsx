@@ -75,7 +75,13 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
           </Badge>
         )}
 
-        {best ? <ConfidenceDial value={result.confidence} /> : <ConfidenceMeter value={result.confidence} />}
+        {best ? (
+          <ConfidenceDial value={result.confidence} />
+        ) : (
+          <div className={cn(!byAI && "pr-10")}>
+            <ConfidenceMeter value={result.confidence} />
+          </div>
+        )}
 
         <h3
           className={cn(
@@ -128,7 +134,9 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
 
   return (
     <m.div variants={developIn} className="h-full">
-      {best ? body : <TiltCard className="rounded-lens">{body}</TiltCard>}
+      <TiltCard className="rounded-lens" max={best ? 4 : 7}>
+        {body}
+      </TiltCard>
     </m.div>
   );
 }

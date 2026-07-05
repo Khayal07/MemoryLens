@@ -35,9 +35,18 @@ _REPAIR_HINT = "\n\nIMPORTANT: respond with ONLY valid JSON of the required shap
 # Anything outside 7-bit ASCII implies a non-English memory worth translating for
 # the English-only local retrieval/rerank models (Azerbaijani ə, ğ, ş, ç, ö, ü, ı …).
 _NON_ASCII = re.compile(r"[^\x00-\x7f]")
+# MemoryLens only targets Latin-script languages (English, Azerbaijani). Cyrillic in
+# an LLM reply is always a nano language slip — scrub it unless the memory itself
+# was Cyrillic (a genuine Russian query still gets Russian answers).
+_CYRILLIC = re.compile(r"[Ѐ-ӿ]")
 # Categories OMDb can poster (film/series) and the year pattern in a free-form detail.
 _OMDB_KIND = {"movies": "movie", "tv": "series"}
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
+
+
+def _is_foreign_script(text: str | None, query: str) -> bool:
+    """True when LLM text is Cyrillic but the memory wasn't — a nano language slip."""
+    return bool(text) and bool(_CYRILLIC.search(text)) and not _CYRILLIC.search(query)
 
 
 def _year_from(detail: str | None) -> str | None:
@@ -89,7 +98,9 @@ class SearchPipeline:
 
         reranked = self.reranker.rerank(retrieval_query, candidates, top_n=self.rerank_top_n)
         reasoning = self._reason(category, cleaned, reranked)
-        results, suggestion = self._build_results(category_key, reranked, reasoning, max_results)
+        results, suggestion = self._build_results(
+            category_key, cleaned, reranked, reasoning, max_results
+        )
         results = self._maybe_add_freeform(category, cleaned, results, max_results)
         return SearchResponse(
             query=query, category=category_key, results=results, suggestion=suggestion
@@ -189,6 +200,9 @@ class SearchPipeline:
         kind = _OMDB_KIND.get(category.key)
         if kind:
             image_url = fetch_poster(ident.title.strip(), _year_from(ident.detail), kind)
+        reason = ident.reason or None
+        if _is_foreign_script(reason, query):
+            reason = None
         return ResultItem(
             item_id=0,
             title=ident.title.strip(),
@@ -197,12 +211,13 @@ class SearchPipeline:
             source_url=None,
             metadata={"source": "gpt-knowledge", "detail": ident.detail},
             confidence=confidence,
-            reason=ident.reason or None,
+            reason=reason,
         )
 
     def _build_results(
         self,
         category_key: str,
+        query: str,
         reranked: list[Candidate],
         reasoning: LLMReasoning | None,
         max_results: int,
@@ -216,13 +231,14 @@ class SearchPipeline:
                 cand = by_id.get(match.item_id)
                 if cand is None:
                     continue  # ignore any id the model invented
+                reason = None if _is_foreign_script(match.reason, query) else match.reason
                 results.append(
                     self._to_result(
                         cand,
                         compute_confidence(
                             match.rating, cand.rerank_score, cand.retrieval_score, max_retrieval
                         ),
-                        match.reason,
+                        reason,
                     )
                 )
 
@@ -239,7 +255,7 @@ class SearchPipeline:
                     )
                 )
 
-        return results[:max_results], self._validate_mismatch(category_key, reasoning)
+        return results[:max_results], self._validate_mismatch(category_key, query, reasoning)
 
     @staticmethod
     def _to_result(cand: Candidate, confidence: float, reason: str | None) -> ResultItem:
@@ -256,16 +272,17 @@ class SearchPipeline:
 
     @staticmethod
     def _validate_mismatch(
-        category_key: str, reasoning: LLMReasoning | None
+        category_key: str, query: str, reasoning: LLMReasoning | None
     ) -> MismatchSuggestion | None:
         if not reasoning or not reasoning.category_mismatch:
             return None
         suspected = reasoning.category_mismatch.suspected_category
         if suspected not in CATEGORY_KEYS or suspected == category_key:
             return None
-        return MismatchSuggestion(
-            suspected_category=suspected, message=reasoning.category_mismatch.message
-        )
+        message = reasoning.category_mismatch.message
+        if _is_foreign_script(message, query):
+            message = ""  # frontend banner falls back to a neutral template
+        return MismatchSuggestion(suspected_category=suspected, message=message)
 
 
 @lru_cache

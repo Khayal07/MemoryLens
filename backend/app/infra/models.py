@@ -80,6 +80,41 @@ class ItemEmbedding(Base):
     item: Mapped["Item"] = relationship(back_populates="embedding")
 
 
+class Collection(Base):
+    __tablename__ = "collections"
+    __table_args__ = (UniqueConstraint("user_id", "name", name="uq_collection_user_name"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    name: Mapped[str] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    items: Mapped[list["CollectionItem"]] = relationship(
+        back_populates="collection", cascade="all, delete-orphan"
+    )
+
+
+class CollectionItem(Base):
+    __tablename__ = "collection_items"
+    __table_args__ = (UniqueConstraint("collection_id", "item_id", name="uq_collection_item"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    collection_id: Mapped[int] = mapped_column(
+        ForeignKey("collections.id", ondelete="CASCADE"), index=True
+    )
+    item_id: Mapped[int] = mapped_column(ForeignKey("items.id", ondelete="CASCADE"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    collection: Mapped["Collection"] = relationship(back_populates="items")
+    item: Mapped["Item"] = relationship()
+
+
 class Search(Base):
     __tablename__ = "searches"
 

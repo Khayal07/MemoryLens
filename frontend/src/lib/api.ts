@@ -1,5 +1,6 @@
 import type {
   Category,
+  Collection,
   SearchResponse,
   SearchSummary,
   SimilarItem,
@@ -78,4 +79,27 @@ export const api = {
   history: () => request<SearchSummary[]>("/searches"),
 
   similar: (itemId: number) => request<SimilarItem[]>(`/items/${itemId}/similar`),
+
+  collections: () => request<Collection[]>("/collections"),
+
+  createCollection: (name: string) =>
+    request<Collection>("/collections", { method: "POST", body: JSON.stringify({ name }) }),
+
+  renameCollection: (id: number, name: string) =>
+    request<Collection>(`/collections/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ name }),
+    }),
+
+  deleteCollection: (id: number) =>
+    request<void>(`/collections/${id}`, { method: "DELETE" }),
+
+  addToCollection: (id: number, itemId: number) =>
+    request<void>(`/collections/${id}/items`, {
+      method: "POST",
+      body: JSON.stringify({ item_id: itemId }),
+    }),
+
+  removeFromCollection: (id: number, itemId: number) =>
+    request<void>(`/collections/${id}/items/${itemId}`, { method: "DELETE" }),
 };

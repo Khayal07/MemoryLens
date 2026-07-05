@@ -44,6 +44,23 @@ export interface SearchSummary {
   result_count: number;
 }
 
+export interface SavedItem {
+  item_id: number;
+  title: string;
+  description: string;
+  image_url: string | null;
+  source_url: string | null;
+  category: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface Collection {
+  id: number;
+  name: string;
+  created_at: string;
+  items: SavedItem[];
+}
+
 export interface Tokens {
   access_token: string;
   refresh_token: string;

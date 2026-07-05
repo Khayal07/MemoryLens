@@ -7,6 +7,7 @@ import TiltCard from "./motion/TiltCard";
 import Badge from "./ui/Badge";
 import ConfidenceDial from "./ConfidenceDial";
 import ConfidenceMeter from "./ConfidenceMeter";
+import SaveButton from "./SaveButton";
 
 interface Props {
   result: ResultItem;
@@ -31,7 +32,7 @@ export default function ResultCard({ result, best, icon }: Props) {
   const body = (
     <article
       className={cn(
-        "grid h-full rounded-lens",
+        "relative grid h-full rounded-lens",
         best
           ? "glass-strong grid-cols-[148px_1fr] items-center gap-6 p-[26px] max-sm:grid-cols-1 max-sm:justify-items-center max-sm:text-center"
           : "glass grid-cols-[84px_1fr] gap-4 p-4",
@@ -41,6 +42,11 @@ export default function ResultCard({ result, best, icon }: Props) {
             : "shadow-glow ring-1 ring-violet/30 border-violet/40"),
       )}
     >
+      {!byAI && (
+        <div className="absolute right-3 top-3 z-30">
+          <SaveButton itemId={result.item_id} />
+        </div>
+      )}
       {showImage ? (
         <img
           className={cn("rounded-[10px] border border-glass-line object-cover", posterSize)}

@@ -9,6 +9,7 @@ const Search = lazy(() => import("./pages/Search"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const History = lazy(() => import("./pages/History"));
+const Collections = lazy(() => import("./pages/Collections"));
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,14 @@ const router = createBrowserRouter([
         element: (
           <Protected>
             <History />
+          </Protected>
+        ),
+      },
+      {
+        path: "/collections",
+        element: (
+          <Protected>
+            <Collections />
           </Protected>
         ),
       },

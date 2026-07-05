@@ -49,6 +49,9 @@ export default function Layout() {
           <nav className="flex items-center gap-1.5">
             {isAuthenticated ? (
               <>
+                <Link to="/collections" className={navLink}>
+                  Collections
+                </Link>
                 <Link to="/history" className={navLink}>
                   History
                 </Link>

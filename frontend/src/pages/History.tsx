@@ -56,8 +56,8 @@ export default function History() {
             <m.div
               key={h.id}
               variants={fadeUp}
-              className="flex items-center justify-between gap-3 rounded-xl border border-line
-                bg-raised px-4 py-3.5 transition-colors hover:border-line-strong"
+              className="glass flex items-center justify-between gap-3 rounded-xl px-4 py-3.5
+                transition-colors hover:border-violet/40"
             >
               <div>
                 <div className="font-medium">{h.query}</div>

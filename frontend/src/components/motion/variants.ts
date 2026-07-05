@@ -27,9 +27,15 @@ export const stagger = (gap = 0.07, delay = 0): Variants => ({
   show: { transition: { staggerChildren: gap, delayChildren: delay } },
 });
 
-/** Page-transition variants for route changes. */
+/** Page-transition variants for route changes — a spatial fade with depth. */
 export const pageTransition: Variants = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.2, 0.7, 0.2, 1] } },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: "easeIn" } },
+  hidden: { opacity: 0, y: 12, scale: 0.98, filter: "blur(6px)" },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.36, ease: [0.2, 0.7, 0.2, 1] },
+  },
+  exit: { opacity: 0, y: -8, scale: 0.99, filter: "blur(4px)", transition: { duration: 0.2, ease: "easeIn" } },
 };

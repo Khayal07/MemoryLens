@@ -58,7 +58,7 @@ export default function AuthForm({
       initial="hidden"
       animate="show"
       onSubmit={handle}
-      className="mx-auto max-w-[400px] rounded-lens-lg border border-line bg-raised p-8"
+      className="glass-strong mx-auto max-w-[400px] rounded-lens-lg p-8"
     >
       <h2 className="mb-1.5 font-display text-[1.6rem] font-bold tracking-[-0.02em]">{title}</h2>
       <p className="mb-[22px] text-[0.92rem] text-muted">{subtitle}</p>

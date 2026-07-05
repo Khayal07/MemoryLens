@@ -43,7 +43,7 @@ export default function Search() {
   return (
     <div>
       <div className="mb-[22px] flex items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-raised px-3.5 py-[7px] text-[0.9rem] font-semibold">
+        <span className="glass inline-flex items-center gap-2 rounded-full px-3.5 py-[7px] text-[0.9rem] font-semibold">
           <span aria-hidden="true">{current?.icon ?? "🔎"}</span>
           {current?.display_name ?? category}
         </span>
@@ -56,8 +56,8 @@ export default function Search() {
       </div>
 
       <form
-        className="flex gap-2.5 rounded-2xl border border-line-strong bg-raised p-2 shadow-lens
-          transition-[border-color,box-shadow] focus-within:border-violet focus-within:ring-4 focus-within:ring-violet/20"
+        className="glass-strong flex gap-2.5 rounded-2xl p-2.5
+          transition-shadow focus-within:shadow-glow focus-within:ring-2 focus-within:ring-violet/50"
         onSubmit={(e) => {
           e.preventDefault();
           submit(query);
@@ -101,7 +101,7 @@ export default function Search() {
                   setQuery(ex);
                   submit(ex);
                 }}
-                className="rounded-full border border-dashed border-line-strong px-3 py-1.5 text-[0.82rem] text-muted transition-colors hover:border-violet hover:text-ink"
+                className="glass rounded-full px-3 py-1.5 text-[0.82rem] text-muted transition-colors hover:border-violet/60 hover:text-ink"
               >
                 {ex}
               </m.button>

@@ -2,7 +2,8 @@ import { m } from "framer-motion";
 import { useState } from "react";
 import type { ResultItem } from "../lib/types";
 import { cn } from "../lib/cn";
-import { developIn, spring } from "./motion/variants";
+import { developIn } from "./motion/variants";
+import TiltCard from "./motion/TiltCard";
 import Badge from "./ui/Badge";
 import ConfidenceDial from "./ConfidenceDial";
 import ConfidenceMeter from "./ConfidenceMeter";
@@ -27,26 +28,22 @@ export default function ResultCard({ result, best, icon }: Props) {
 
   const posterSize = best ? "w-[148px] h-[214px]" : "w-[84px] h-[120px]";
 
-  return (
-    <m.article
-      variants={developIn}
-      whileHover={best ? undefined : { y: -2 }}
-      transition={spring}
+  const body = (
+    <article
       className={cn(
-        "grid rounded-lens border bg-raised",
+        "grid h-full rounded-lens",
         best
-          ? "grid-cols-[148px_1fr] items-center gap-6 p-[26px] max-sm:grid-cols-1 max-sm:justify-items-center max-sm:text-center"
-          : "grid-cols-[84px_1fr] gap-4 p-4",
-        best
-          ? byAI
-            ? "border-amber/40 shadow-glow-amber ring-1 ring-amber/20 bg-gradient-to-b from-amber/[0.07] to-raised"
-            : "border-violet/40 shadow-glow ring-1 ring-violet/20 bg-gradient-to-b from-violet/[0.06] to-raised"
-          : "border-line",
+          ? "glass-strong grid-cols-[148px_1fr] items-center gap-6 p-[26px] max-sm:grid-cols-1 max-sm:justify-items-center max-sm:text-center"
+          : "glass grid-cols-[84px_1fr] gap-4 p-4",
+        best &&
+          (byAI
+            ? "shadow-glow-amber ring-1 ring-amber/30 border-amber/40"
+            : "shadow-glow ring-1 ring-violet/30 border-violet/40"),
       )}
     >
       {showImage ? (
         <img
-          className={cn("rounded-[10px] border border-line object-cover bg-raised-2", posterSize)}
+          className={cn("rounded-[10px] border border-glass-line object-cover", posterSize)}
           src={result.image_url!}
           alt=""
           loading="lazy"
@@ -56,14 +53,14 @@ export default function ResultCard({ result, best, icon }: Props) {
         <div
           className={cn(
             "flex items-center justify-center rounded-[10px] border border-amber/30",
-            "bg-[radial-gradient(circle_at_50%_40%,rgba(245,180,104,0.14),var(--color-raised-2))]",
+            "bg-[radial-gradient(circle_at_50%_40%,rgba(245,180,104,0.16),rgba(23,26,46,0.5))]",
             posterSize,
           )}
           aria-hidden="true"
         >
           <span
             className="relative aspect-square w-[44%] rounded-full border-2 border-amber
-              shadow-[0_0_0_3px_rgba(245,180,104,0.15)]
+              shadow-[0_0_16px_-2px_rgba(245,180,104,0.7)]
               after:absolute after:inset-[22%] after:rounded-full
               after:bg-[radial-gradient(circle_at_35%_30%,var(--color-amber),var(--color-violet))]"
           />
@@ -71,7 +68,7 @@ export default function ResultCard({ result, best, icon }: Props) {
       ) : (
         <div
           className={cn(
-            "flex items-center justify-center rounded-[10px] border border-line bg-raised-2 text-[1.8rem] text-faint",
+            "flex items-center justify-center rounded-[10px] border border-glass-line bg-white/[0.03] text-[1.8rem] text-faint",
             posterSize,
           )}
           aria-hidden="true"
@@ -92,7 +89,7 @@ export default function ResultCard({ result, best, icon }: Props) {
         <h3
           className={cn(
             "font-display font-semibold tracking-[-0.01em]",
-            best ? "mt-3 text-[1.6rem]" : "mt-2 text-[1.1rem]",
+            best ? "mt-3 text-[1.7rem]" : "mt-2 text-[1.1rem]",
           )}
         >
           {result.title}
@@ -112,7 +109,7 @@ export default function ResultCard({ result, best, icon }: Props) {
             {tags.map(([k, v]) => (
               <span
                 key={k}
-                className="rounded-md border border-line px-1.5 py-0.5 font-mono text-[0.7rem] text-muted"
+                className="rounded-md border border-glass-line bg-white/[0.03] px-1.5 py-0.5 font-mono text-[0.7rem] text-muted"
               >
                 {k}: {String(Array.isArray(v) ? v.join(", ") : v)}
               </span>
@@ -131,6 +128,12 @@ export default function ResultCard({ result, best, icon }: Props) {
           </a>
         )}
       </div>
-    </m.article>
+    </article>
+  );
+
+  return (
+    <m.div variants={developIn} className="h-full">
+      {best ? body : <TiltCard className="rounded-lens">{body}</TiltCard>}
+    </m.div>
   );
 }

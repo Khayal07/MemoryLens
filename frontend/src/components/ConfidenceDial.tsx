@@ -38,7 +38,7 @@ export default function ConfidenceDial({ value }: { value: number }) {
       aria-valuemax={100}
       aria-label={`Confidence ${pct} percent`}
     >
-      <svg viewBox="0 0 120 120" width="120" height="120">
+      <svg viewBox="0 0 120 120" width="120" height="120" style={{ filter: `drop-shadow(0 0 8px ${color})` }}>
         <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={8} />
         <m.circle
           cx="60"

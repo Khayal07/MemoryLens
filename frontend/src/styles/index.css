@@ -1,8 +1,47 @@
+@import "tailwindcss";
+
 /* ============================================================
    MemoryLens — "Lens / Recall" design system
    Forgetting is fog; remembering is bringing it into focus.
    Palette: indigo night → periwinkle (memory) → amber (recognition).
+
+   Tokens live in @theme so Tailwind generates matching utilities
+   (bg-night, text-violet-soft, font-display, rounded-lens…). The
+   legacy :root vars below are kept until every component migrates.
    ============================================================ */
+
+@theme {
+  /* colour — indigo night → periwinkle → amber */
+  --color-night: #0e1020;
+  --color-raised: #171a2e;
+  --color-raised-2: #20244180;
+  --color-ink: #e8e9f3;
+  --color-muted: #8a8fb0;
+  --color-faint: #6a6f96; /* nudged lighter than legacy #5b6088 for AA */
+  --color-violet: #7c6bf5;
+  --color-violet-soft: #9a8dff;
+  --color-amber: #f5b468;
+  --color-danger: #f5687f;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-line-strong: rgba(255, 255, 255, 0.16);
+
+  /* type */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Hanken Grotesk", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  /* radius — the lens corner */
+  --radius-lens: 14px;
+  --radius-lens-lg: 18px;
+
+  /* elevation — soft indigo-tinted shadows */
+  --shadow-lens: 0 20px 50px -30px rgba(0, 0, 0, 0.8);
+  --shadow-glow: 0 24px 50px -34px rgba(124, 107, 245, 0.7);
+  --shadow-glow-amber: 0 24px 50px -34px rgba(245, 180, 104, 0.55);
+
+  /* motion easing */
+  --ease-develop: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
 
 :root {
   --night: #0e1020;

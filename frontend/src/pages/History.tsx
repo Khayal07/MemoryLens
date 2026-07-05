@@ -1,41 +1,75 @@
 import { useQuery } from "@tanstack/react-query";
+import { m } from "framer-motion";
 import { Link } from "react-router-dom";
+import Eyebrow from "../components/ui/Eyebrow";
+import EmptyState from "../components/ui/EmptyState";
+import Skeleton from "../components/ui/Skeleton";
+import { developIn, fadeUp, stagger } from "../components/motion/variants";
 import { api } from "../lib/api";
 
 export default function History() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["history"],
-    queryFn: api.history,
-  });
+  const { data, isLoading, isError } = useQuery({ queryKey: ["history"], queryFn: api.history });
 
   return (
     <div>
-      <section className="hero" style={{ marginBottom: 28 }}>
-        <span className="eyebrow">Your searches</span>
-        <h1 style={{ fontSize: "2rem" }}>What you've looked for</h1>
-      </section>
+      <m.section variants={stagger(0.08)} initial="hidden" animate="show" className="mb-7">
+        <m.div variants={developIn}>
+          <Eyebrow>Your searches</Eyebrow>
+        </m.div>
+        <m.h1
+          variants={developIn}
+          className="mt-2 font-display text-[2rem] font-bold tracking-[-0.02em]"
+        >
+          What you've looked for
+        </m.h1>
+      </m.section>
 
-      {isLoading && <p className="loading">Loading…</p>}
-      {isError && <p className="empty">Couldn't load your history.</p>}
-      {data && data.length === 0 && (
-        <p className="empty">
-          No searches yet. <Link to="/" className="source">Start recalling →</Link>
-        </p>
+      {isLoading && (
+        <div className="flex flex-col gap-2.5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[62px]" />
+          ))}
+        </div>
       )}
 
-      <div className="hist">
-        {data?.map((h) => (
-          <div className="hist-row" key={h.id}>
-            <div>
-              <div className="hist-q">{h.query}</div>
-              <div className="hist-meta">
-                {h.category} · {new Date(h.created_at).toLocaleDateString()}
+      {isError && <EmptyState title="Couldn't load your history." />}
+
+      {data && data.length === 0 && (
+        <EmptyState
+          title="No searches yet."
+          action={
+            <Link to="/" className="text-[0.9rem] text-violet-soft hover:underline">
+              Start recalling →
+            </Link>
+          }
+        />
+      )}
+
+      {data && data.length > 0 && (
+        <m.div
+          className="flex flex-col gap-2.5"
+          variants={stagger(0.05)}
+          initial="hidden"
+          animate="show"
+        >
+          {data.map((h) => (
+            <m.div
+              key={h.id}
+              variants={fadeUp}
+              className="flex items-center justify-between gap-3 rounded-xl border border-line
+                bg-raised px-4 py-3.5 transition-colors hover:border-line-strong"
+            >
+              <div>
+                <div className="font-medium">{h.query}</div>
+                <div className="font-mono text-[0.74rem] text-faint">
+                  {h.category} · {new Date(h.created_at).toLocaleDateString()}
+                </div>
               </div>
-            </div>
-            <span className="hist-meta">{h.result_count} results</span>
-          </div>
-        ))}
-      </div>
+              <span className="font-mono text-[0.74rem] text-faint">{h.result_count} results</span>
+            </m.div>
+          ))}
+        </m.div>
+      )}
     </div>
   );
 }

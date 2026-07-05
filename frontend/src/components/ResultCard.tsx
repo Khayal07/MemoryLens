@@ -8,17 +8,19 @@ import Badge from "./ui/Badge";
 import ConfidenceDial from "./ConfidenceDial";
 import ConfidenceMeter from "./ConfidenceMeter";
 import SaveButton from "./SaveButton";
+import FeedbackButtons from "./FeedbackButtons";
 
 interface Props {
   result: ResultItem;
   best?: boolean;
   icon?: string | null;
+  searchId?: number;
 }
 
 /** Internal metadata keys that should never be shown as user-facing tags. */
 const HIDDEN_META = new Set(["source", "image_url", "source_url"]);
 
-export default function ResultCard({ result, best, icon }: Props) {
+export default function ResultCard({ result, best, icon, searchId }: Props) {
   const [imageFailed, setImageFailed] = useState(false);
   const byAI = result.metadata?.source === "gpt-knowledge";
   const showImage = result.image_url && !imageFailed && !byAI;
@@ -132,6 +134,10 @@ export default function ResultCard({ result, best, icon }: Props) {
           >
             View source ↗
           </a>
+        )}
+
+        {!byAI && searchId !== undefined && (
+          <FeedbackButtons searchId={searchId} itemId={result.item_id} />
         )}
       </div>
     </article>

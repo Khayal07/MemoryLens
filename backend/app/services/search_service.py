@@ -10,6 +10,7 @@ from app.domain.categories import CATEGORY_KEYS
 from app.infra import cache
 from app.infra.models import Category, Search, SearchResult
 from app.schemas.search import SearchResponse
+from app.services import feedback_service
 
 
 def run_search(
@@ -24,13 +25,15 @@ def run_search(
         cache.set_cached(category_key, query, response)
 
     # Always record the search so history reflects every request, cached or not.
-    _persist(db, category_key, query, user_id, response)
+    response.search_id = _persist(db, category_key, query, user_id, response)
+    # Apply crowd feedback every request (cache-independent) so votes take effect now.
+    feedback_service.apply_feedback(db, response)
     return response
 
 
 def _persist(
     db: Session, category_key: str, query: str, user_id: int | None, response: SearchResponse
-) -> None:
+) -> int:
     category_id = db.execute(
         select(Category.id).where(Category.key == category_key)
     ).scalar_one()
@@ -52,6 +55,7 @@ def _persist(
             )
         )
     db.commit()
+    return search.id
 
 
 def list_history(db: Session, user_id: int, limit: int = 50) -> list[dict]:

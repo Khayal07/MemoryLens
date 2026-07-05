@@ -31,6 +31,9 @@ class MismatchSuggestion(BaseModel):
 class SearchResponse(BaseModel):
     query: str
     category: str
+    # Id of the persisted search row — the client attaches result feedback to it.
+    # 0 until the search is recorded (set by the service, not the pipeline).
+    search_id: int = 0
     results: list[ResultItem] = Field(default_factory=list)
     suggestion: MismatchSuggestion | None = None
 

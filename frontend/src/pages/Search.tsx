@@ -149,7 +149,12 @@ export default function Search() {
             <Eyebrow>Best match</Eyebrow>
           </div>
           <m.div variants={stagger()} initial="hidden" animate="show">
-            <ResultCard result={response.results[0]} best icon={current?.icon} />
+            <ResultCard
+              result={response.results[0]}
+              best
+              icon={current?.icon}
+              searchId={response.search_id}
+            />
           </m.div>
 
           {response.results.length > 1 && (
@@ -164,7 +169,12 @@ export default function Search() {
                 animate="show"
               >
                 {response.results.slice(1).map((r, i) => (
-                  <ResultCard key={`${r.item_id}-${i}`} result={r} icon={current?.icon} />
+                  <ResultCard
+                    key={`${r.item_id}-${i}`}
+                    result={r}
+                    icon={current?.icon}
+                    searchId={response.search_id}
+                  />
                 ))}
               </m.div>
             </>

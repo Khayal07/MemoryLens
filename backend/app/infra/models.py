@@ -9,6 +9,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -130,6 +131,26 @@ class Search(Base):
 
     results: Mapped[list["SearchResult"]] = relationship(
         back_populates="search", cascade="all, delete-orphan"
+    )
+
+
+class ResultFeedback(Base):
+    __tablename__ = "result_feedback"
+    __table_args__ = (UniqueConstraint("user_id", "item_id", name="uq_feedback_user_item"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    search_id: Mapped[int | None] = mapped_column(
+        ForeignKey("searches.id", ondelete="SET NULL")
+    )
+    item_id: Mapped[int] = mapped_column(
+        ForeignKey("items.id", ondelete="CASCADE"), index=True
+    )
+    vote: Mapped[int] = mapped_column(SmallInteger)  # +1 up, -1 down
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
     )
 
 

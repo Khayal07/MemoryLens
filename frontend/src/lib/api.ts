@@ -102,4 +102,10 @@ export const api = {
 
   removeFromCollection: (id: number, itemId: number) =>
     request<void>(`/collections/${id}/items/${itemId}`, { method: "DELETE" }),
+
+  feedback: (searchId: number, itemId: number, vote: 1 | -1) =>
+    request<void>("/feedback", {
+      method: "POST",
+      body: JSON.stringify({ search_id: searchId, item_id: itemId, vote }),
+    }),
 };

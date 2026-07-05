@@ -32,6 +32,7 @@ export interface SimilarItem {
 export interface SearchResponse {
   query: string;
   category: string;
+  search_id: number;
   results: ResultItem[];
   suggestion: MismatchSuggestion | null;
 }

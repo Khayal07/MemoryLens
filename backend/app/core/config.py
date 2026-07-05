@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     rrf_keyword_weight: float = 0.6
     rerank_top_n: int = 12
     hyde_enabled: bool = False
+    # Multilingual queries: local embed/rerank models are English-only, so a
+    # non-English memory is translated to English for retrieval while the LLM keeps
+    # the original text and answers in the user's language.
+    translate_enabled: bool = True
     # Free-form fallback: when the best grounded match scores below this (0..100),
     # let the LLM name the real item from its own knowledge.
     freeform_enabled: bool = True

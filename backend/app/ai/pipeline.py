@@ -6,6 +6,7 @@ confidence → alternatives → mismatch suggestion → response.
 The LLM only selects/explains among grounded candidates; results are always real
 catalog items. Confidence is computed from blended signals, not the model's claim."""
 
+import re
 from functools import lru_cache
 
 import structlog
@@ -16,7 +17,7 @@ from app.ai.cleaning import clean_query, validate_query
 from app.ai.confidence import compute_confidence
 from app.ai.identify import IdentifyParseError, parse_identification
 from app.ai.llm import LLMClient, LLMError
-from app.ai.prompts import hyde, identify
+from app.ai.prompts import hyde, identify, translate
 from app.ai.prompts.reasoning import SYSTEM_PROMPT, build_user_prompt
 from app.ai.reasoning import LLMReasoning, ReasoningParseError, parse_reasoning
 from app.ai.reranker import get_reranker
@@ -30,6 +31,9 @@ from app.schemas.search import MismatchSuggestion, ResultItem, SearchResponse
 log = structlog.get_logger()
 
 _REPAIR_HINT = "\n\nIMPORTANT: respond with ONLY valid JSON of the required shape."
+# Anything outside 7-bit ASCII implies a non-English memory worth translating for
+# the English-only local retrieval/rerank models (Azerbaijani ə, ğ, ş, ç, ö, ü, ı …).
+_NON_ASCII = re.compile(r"[^\x00-\x7f]")
 
 
 class SearchPipeline:
@@ -40,6 +44,7 @@ class SearchPipeline:
         llm,
         rerank_top_n: int = 12,
         hyde_enabled: bool = True,
+        translate_enabled: bool = True,
         freeform_enabled: bool = True,
         freeform_confidence_floor: float = 65.0,
     ) -> None:
@@ -48,6 +53,7 @@ class SearchPipeline:
         self.llm = llm
         self.rerank_top_n = rerank_top_n
         self.hyde_enabled = hyde_enabled
+        self.translate_enabled = translate_enabled
         self.freeform_enabled = freeform_enabled
         self.freeform_confidence_floor = freeform_confidence_floor
 
@@ -58,21 +64,39 @@ class SearchPipeline:
         cleaned = clean_query(query)
         category = self._resolve_category(db, category_key)
 
-        embed_text = self._expand_query(category, cleaned)
-        candidates = self.retriever.search(db, category.id, cleaned, k=30, embed_text=embed_text)
+        # English key for the local (English-only) retrieval + rerank models; the
+        # original `cleaned` text still drives reasoning so answers stay in-language.
+        retrieval_query = self._to_retrieval_query(cleaned)
+        embed_text = self._expand_query(category, retrieval_query)
+        candidates = self.retriever.search(
+            db, category.id, retrieval_query, k=30, embed_text=embed_text
+        )
 
         if not candidates:
             # Nothing in the catalog resembled the memory — let the LLM name it.
             results = self._maybe_add_freeform(category, cleaned, [], max_results)
             return SearchResponse(query=query, category=category_key, results=results)
 
-        reranked = self.reranker.rerank(cleaned, candidates, top_n=self.rerank_top_n)
+        reranked = self.reranker.rerank(retrieval_query, candidates, top_n=self.rerank_top_n)
         reasoning = self._reason(category, cleaned, reranked)
         results, suggestion = self._build_results(category_key, reranked, reasoning, max_results)
         results = self._maybe_add_freeform(category, cleaned, results, max_results)
         return SearchResponse(
             query=query, category=category_key, results=results, suggestion=suggestion
         )
+
+    def _to_retrieval_query(self, query: str) -> str:
+        """Translate a non-English memory to English for the local retrieval/rerank
+        models. Skipped for plain-ASCII (English) text; best-effort — any LLM failure
+        falls back to the raw query so retrieval never depends on the network."""
+        if not self.translate_enabled or not _NON_ASCII.search(query):
+            return query
+        try:
+            english = self.llm.complete_text(translate.SYSTEM_PROMPT, query).strip()
+        except LLMError as exc:
+            log.warning("pipeline.translate_failed", error=str(exc))
+            return query
+        return english or query
 
     def _expand_query(self, category: Category, query: str) -> str:
         """HyDE: ask the LLM for a hypothetical catalog description and append it to the
@@ -238,6 +262,7 @@ def get_pipeline() -> SearchPipeline:
         LLMClient(),
         rerank_top_n=settings.rerank_top_n,
         hyde_enabled=settings.hyde_enabled,
+        translate_enabled=settings.translate_enabled,
         freeform_enabled=settings.freeform_enabled,
         freeform_confidence_floor=settings.freeform_confidence_floor,
     )

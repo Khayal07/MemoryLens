@@ -24,6 +24,10 @@ specific clues in the memory to that candidate.
 5. If the memory clearly describes a DIFFERENT category than the one selected, set \
 `category_mismatch` with the suspected category key and a polite one-line message. \
 Otherwise set it to null. Do NOT switch categories yourself — only suggest.
+6. LANGUAGE: write every `reason` and every mismatch `message` in the SAME language \
+the user wrote the MEMORY in (e.g. if the memory is in Azerbaijani, answer in \
+Azerbaijani). Keep real titles in their original form. This affects only the wording \
+of your explanations, never the item selection.
 
 Respond with ONLY a JSON object of this exact shape:
 {
@@ -49,4 +53,9 @@ def build_user_prompt(
         meta = ", ".join(f"{k}={v}" for k, v in c.metadata.items() if v)
         suffix = f" ({meta})" if meta else ""
         lines.append(f"- item_id={c.item_id}: {c.title}{suffix} — {c.description}")
+    lines.append("")
+    lines.append(
+        "REMINDER: write every `reason` and mismatch `message` in the SAME language as "
+        "the MEMORY above. Keep titles unchanged."
+    )
     return "\n".join(lines)

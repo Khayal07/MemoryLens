@@ -8,6 +8,10 @@ Using your own knowledge, name the single most likely REAL, existing {category} 
 that the memory describes. It must be a real title that exists — never invent one. \
 If you genuinely cannot identify it, set "title" to an empty string.
 
+Write `detail` and `reason` in the SAME language the user wrote the MEMORY in \
+(e.g. Azerbaijani memory → Azerbaijani wording). Keep the real `title` in its \
+original form.
+
 Respond with ONLY a JSON object of this exact shape:
 {{
   "title": "<the real title, or empty string if unknown>",

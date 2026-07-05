@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { m } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Eyebrow from "../components/ui/Eyebrow";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
@@ -9,9 +9,24 @@ import { api } from "../lib/api";
 
 export default function History() {
   const { data, isLoading, isError } = useQuery({ queryKey: ["history"], queryFn: api.history });
+  const navigate = useNavigate();
 
   return (
     <div>
+      <m.button
+        type="button"
+        onClick={() => navigate(-1)}
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        whileHover={{ x: -3 }}
+        className="glass mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[0.85rem]
+          font-medium text-muted transition-colors hover:border-violet/40 hover:text-ink
+          focus-visible:outline-2 focus-visible:outline-violet-soft"
+        aria-label="Go back"
+      >
+        <span aria-hidden="true">←</span> Back
+      </m.button>
+
       <m.section variants={stagger(0.08)} initial="hidden" animate="show" className="mb-7">
         <m.div variants={developIn}>
           <Eyebrow>Your searches</Eyebrow>

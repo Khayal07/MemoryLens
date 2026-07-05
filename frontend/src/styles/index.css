@@ -41,6 +41,20 @@
 
   /* motion easing */
   --ease-develop: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  /* skeleton shimmer sweep */
+  --animate-shimmer: shimmer 1.3s linear infinite;
+  @keyframes shimmer {
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer {
+    animation: none;
+  }
 }
 
 :root {

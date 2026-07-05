@@ -7,6 +7,7 @@ from collections.abc import Iterable
 import httpx
 
 from app.core.config import get_settings
+from app.infra.omdb import fetch_poster
 from app.ingest.base import NormalizedItem
 
 TMDB_BASE = "https://api.themoviedb.org/3"
@@ -18,6 +19,9 @@ _CONFIG = {
     "tv": {"path": "/tv/popular", "title": "name", "date": "first_air_date"},
     "actors": {"path": "/person/popular", "title": "name", "date": None},
 }
+
+# TMDB category → OMDb `type` for the poster fallback (person has no OMDb equivalent).
+_OMDB_KIND = {"movies": "movie", "tv": "series"}
 
 
 class TMDBAdapter:
@@ -66,11 +70,20 @@ class TMDBAdapter:
             poster = row.get("poster_path")
             year = (row.get(self._cfg["date"]) or "")[:4]
             metadata = {"year": year, "popularity": row.get("popularity")}
+
+        if poster:
+            image_url = f"{IMG_BASE}{poster}"
+        elif self.category_key in _OMDB_KIND:
+            # TMDb had no poster for this movie/series — try OMDb by title + year.
+            image_url = fetch_poster(title, year, _OMDB_KIND[self.category_key])
+        else:
+            image_url = None
+
         return NormalizedItem(
             external_id=f"tmdb:{row['id']}",
             title=title,
             description=description,
-            image_url=f"{IMG_BASE}{poster}" if poster else None,
+            image_url=image_url,
             source_url=f"https://www.themoviedb.org/{_route(self.category_key)}/{row['id']}",
             metadata=metadata,
         )

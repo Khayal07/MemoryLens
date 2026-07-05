@@ -4,6 +4,7 @@ import type { SimilarItem } from "../lib/types";
 import { api } from "../lib/api";
 import { fadeUp, stagger } from "./motion/variants";
 import TiltCard from "./motion/TiltCard";
+import PosterPlaceholder from "./PosterPlaceholder";
 import Eyebrow from "./ui/Eyebrow";
 import Skeleton from "./ui/Skeleton";
 
@@ -66,12 +67,8 @@ function SimilarCard({ item, icon }: { item: SimilarItem; icon?: string | null }
           className="h-[64px] w-[46px] shrink-0 rounded-md border border-glass-line object-cover"
         />
       ) : (
-        <div
-          className="flex h-[64px] w-[46px] shrink-0 items-center justify-center rounded-md
-            border border-glass-line bg-white/[0.03] text-[1.2rem] text-faint"
-          aria-hidden="true"
-        >
-          {icon ?? "🎞"}
+        <div className="shrink-0">
+          <PosterPlaceholder posterSize="h-[64px] w-[46px]" icon={icon} />
         </div>
       )}
       <div className="min-w-0">

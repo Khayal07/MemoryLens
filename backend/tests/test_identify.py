@@ -25,6 +25,7 @@ class FakeLLM:
 
 class FakeCategory:
     display_name = "Songs"
+    key = "songs"  # not an OMDb-poster category, so no network call in these tests
 
 
 def _identify_payload(title="Counting Stars", conf=0.82):

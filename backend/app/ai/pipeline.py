@@ -26,6 +26,7 @@ from app.ai.types import Candidate
 from app.core.config import get_settings
 from app.domain.categories import CATEGORY_KEYS
 from app.infra.models import Category
+from app.infra.omdb import fetch_poster
 from app.schemas.search import MismatchSuggestion, ResultItem, SearchResponse
 
 log = structlog.get_logger()
@@ -34,6 +35,15 @@ _REPAIR_HINT = "\n\nIMPORTANT: respond with ONLY valid JSON of the required shap
 # Anything outside 7-bit ASCII implies a non-English memory worth translating for
 # the English-only local retrieval/rerank models (Azerbaijani ə, ğ, ş, ç, ö, ü, ı …).
 _NON_ASCII = re.compile(r"[^\x00-\x7f]")
+# Categories OMDb can poster (film/series) and the year pattern in a free-form detail.
+_OMDB_KIND = {"movies": "movie", "tv": "series"}
+_YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
+
+
+def _year_from(detail: str | None) -> str | None:
+    """Pull the first 4-digit year out of a free-form detail like "1957 / Lumet"."""
+    match = _YEAR_RE.search(detail or "")
+    return match.group(0) if match else None
 
 
 class SearchPipeline:
@@ -173,11 +183,17 @@ class SearchPipeline:
         # Ungrounded, so cap below certainty and flag the source for the UI.
         confidence = round(min(ident.confidence, 0.9) * 100, 1)
         description = ident.detail or "Identified from world knowledge — not in the catalog."
+        # The free-form hero has no catalog poster; for films/series pull one from OMDb
+        # so the prominent Best Match isn't a blank frame. Best-effort.
+        image_url = None
+        kind = _OMDB_KIND.get(category.key)
+        if kind:
+            image_url = fetch_poster(ident.title.strip(), _year_from(ident.detail), kind)
         return ResultItem(
             item_id=0,
             title=ident.title.strip(),
             description=description,
-            image_url=None,
+            image_url=image_url,
             source_url=None,
             metadata={"source": "gpt-knowledge", "detail": ident.detail},
             confidence=confidence,

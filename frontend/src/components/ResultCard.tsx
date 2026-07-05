@@ -9,6 +9,7 @@ import ConfidenceDial from "./ConfidenceDial";
 import ConfidenceMeter from "./ConfidenceMeter";
 import SaveButton from "./SaveButton";
 import FeedbackButtons from "./FeedbackButtons";
+import PosterPlaceholder from "./PosterPlaceholder";
 
 interface Props {
   result: ResultItem;
@@ -23,7 +24,8 @@ const HIDDEN_META = new Set(["source", "image_url", "source_url"]);
 export default function ResultCard({ result, best, icon, searchId }: Props) {
   const [imageFailed, setImageFailed] = useState(false);
   const byAI = result.metadata?.source === "gpt-knowledge";
-  const showImage = result.image_url && !imageFailed && !byAI;
+  // Show any real poster we have — including an OMDb one fetched for the AI hero.
+  const showImage = result.image_url && !imageFailed;
 
   const tags = Object.entries(result.metadata)
     .filter(([k, v]) => !HIDDEN_META.has(k) && v !== null && v !== undefined && v !== "")
@@ -57,32 +59,13 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
           loading="lazy"
           onError={() => setImageFailed(true)}
         />
-      ) : byAI ? (
-        <div
-          className={cn(
-            "flex items-center justify-center rounded-[10px] border border-amber/30",
-            "bg-[radial-gradient(circle_at_50%_40%,rgba(245,180,104,0.16),rgba(23,26,46,0.5))]",
-            posterSize,
-          )}
-          aria-hidden="true"
-        >
-          <span
-            className="relative aspect-square w-[44%] rounded-full border-2 border-amber
-              shadow-[0_0_16px_-2px_rgba(245,180,104,0.7)]
-              after:absolute after:inset-[22%] after:rounded-full
-              after:bg-[radial-gradient(circle_at_35%_30%,var(--color-amber),var(--color-violet))]"
-          />
-        </div>
       ) : (
-        <div
-          className={cn(
-            "flex items-center justify-center rounded-[10px] border border-glass-line bg-white/[0.03] text-[1.8rem] text-faint",
-            posterSize,
-          )}
-          aria-hidden="true"
-        >
-          {icon ?? "🎞"}
-        </div>
+        <PosterPlaceholder
+          posterSize={posterSize}
+          tone={byAI ? "amber" : "violet"}
+          icon={icon}
+          big={best}
+        />
       )}
 
       <div className="min-w-0">

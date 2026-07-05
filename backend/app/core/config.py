@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     # Ingestion sources (optional — fixtures used when absent)
     tmdb_api_key: str = ""
     rawg_api_key: str = ""
+    # OMDb: poster fallback when TMDb has none (movies/tv). Blank → placeholder only.
+    omdb_api_key: str = ""
 
     # Database
     database_url: str = "postgresql+psycopg://memorylens:memorylens@localhost:5432/memorylens"

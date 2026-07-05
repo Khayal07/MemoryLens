@@ -7,6 +7,7 @@ import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import { developIn, fadeUp, stagger } from "../components/motion/variants";
 import TiltCard from "../components/motion/TiltCard";
+import PosterPlaceholder from "../components/PosterPlaceholder";
 import { api } from "../lib/api";
 import type { Collection, SavedItem } from "../lib/types";
 
@@ -242,12 +243,8 @@ function SavedCard({ item, onRemove }: { item: SavedItem; onRemove: () => void }
           className="h-[64px] w-[46px] shrink-0 rounded-md border border-glass-line object-cover"
         />
       ) : (
-        <div
-          className="flex h-[64px] w-[46px] shrink-0 items-center justify-center rounded-md
-            border border-glass-line bg-white/[0.03] text-[1.2rem] text-faint"
-          aria-hidden="true"
-        >
-          🎞
+        <div className="shrink-0">
+          <PosterPlaceholder posterSize="h-[64px] w-[46px]" icon="🎞" />
         </div>
       )}
       <div className="min-w-0 pr-4">

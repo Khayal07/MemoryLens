@@ -1,8 +1,15 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { m } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import MismatchBanner from "../components/MismatchBanner";
 import ResultCard from "../components/ResultCard";
+import Button from "../components/ui/Button";
+import EmptyState from "../components/ui/EmptyState";
+import Eyebrow from "../components/ui/Eyebrow";
+import Skeleton from "../components/ui/Skeleton";
+import Alert from "../components/ui/Alert";
+import { fadeUp, stagger } from "../components/motion/variants";
 import { api, ApiError } from "../lib/api";
 
 const EXAMPLES: Record<string, string[]> = {
@@ -22,9 +29,7 @@ export default function Search() {
   const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: api.categories });
   const current = categories?.find((c) => c.key === category);
 
-  const mutation = useMutation({
-    mutationFn: (q: string) => api.search(category, q),
-  });
+  const mutation = useMutation({ mutationFn: (q: string) => api.search(category, q) });
 
   function submit(text: string) {
     const q = text.trim();
@@ -37,18 +42,22 @@ export default function Search() {
 
   return (
     <div>
-      <div className="searchhead">
-        <span className="chip">
+      <div className="mb-[22px] flex items-center justify-between gap-3">
+        <span className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-raised px-3.5 py-[7px] text-[0.9rem] font-semibold">
           <span aria-hidden="true">{current?.icon ?? "🔎"}</span>
           {current?.display_name ?? category}
         </span>
-        <Link to="/" className="nav-link">
+        <Link
+          to="/"
+          className="rounded-[10px] px-3 py-2 text-[0.92rem] font-medium text-muted transition-colors hover:bg-raised hover:text-ink"
+        >
           ← All categories
         </Link>
       </div>
 
       <form
-        className="recall"
+        className="flex gap-2.5 rounded-2xl border border-line-strong bg-raised p-2 shadow-lens
+          transition-[border-color,box-shadow] focus-within:border-violet focus-within:ring-4 focus-within:ring-violet/20"
         onSubmit={(e) => {
           e.preventDefault();
           submit(query);
@@ -66,38 +75,50 @@ export default function Search() {
           }}
           placeholder={`Describe the ${current?.display_name?.toLowerCase() ?? ""} you half-remember…`}
           aria-label="Describe what you remember"
+          className="max-h-40 min-h-7 flex-1 resize-none bg-transparent px-3 py-3 text-[1.05rem] leading-[1.45] text-ink outline-none placeholder:text-faint"
         />
-        <button className="btn btn-primary" type="submit" disabled={mutation.isPending}>
+        <Button type="submit" disabled={mutation.isPending} className="self-stretch">
           {mutation.isPending ? "Focusing…" : "Recall"}
-        </button>
+        </Button>
       </form>
 
       {!response && !mutation.isPending && (
         <>
-          <p className="hint">Press Enter to search · Shift+Enter for a new line</p>
-          <div className="examples">
+          <p className="mt-3 text-[0.85rem] text-faint">
+            Press Enter to search · Shift+Enter for a new line
+          </p>
+          <m.div
+            className="mt-3.5 flex flex-wrap gap-2"
+            variants={stagger(0.06)}
+            initial="hidden"
+            animate="show"
+          >
             {(EXAMPLES[category] ?? []).map((ex) => (
-              <button
+              <m.button
                 key={ex}
-                className="example"
+                variants={fadeUp}
                 onClick={() => {
                   setQuery(ex);
                   submit(ex);
                 }}
+                className="rounded-full border border-dashed border-line-strong px-3 py-1.5 text-[0.82rem] text-muted transition-colors hover:border-violet hover:text-ink"
               >
                 {ex}
-              </button>
+              </m.button>
             ))}
-          </div>
+          </m.div>
         </>
       )}
 
-      {error && <div className="alert">{error.message}</div>}
+      {error && <div className="mt-4"><Alert>{error.message}</Alert></div>}
 
       {mutation.isPending && (
-        <div style={{ marginTop: 28 }}>
-          <div className="skeleton" />
-          <div className="skeleton" style={{ opacity: 0.6 }} />
+        <div className="mt-7 space-y-3.5">
+          <Skeleton className="h-[214px]" />
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+            <Skeleton className="h-[152px] opacity-70" />
+            <Skeleton className="h-[152px] opacity-50" />
+          </div>
         </div>
       )}
 
@@ -112,32 +133,39 @@ export default function Search() {
       )}
 
       {response && response.results.length === 0 && (
-        <p className="empty">
-          Nothing matched in {current?.display_name ?? category}. Try more details — a
-          scene, a character, a feeling.
-        </p>
+        <EmptyState
+          title={`Nothing matched in ${current?.display_name ?? category}.`}
+          hint="Try more details — a scene, a character, a feeling."
+        />
       )}
 
       {response && response.results.length > 0 && (
-        <>
-          <div className="results-label">
-            <span className="eyebrow">Best match</span>
+        <div key={response.query}>
+          <div className="mb-4 mt-8">
+            <Eyebrow>Best match</Eyebrow>
           </div>
-          <ResultCard result={response.results[0]} best index={0} icon={current?.icon} />
+          <m.div variants={stagger()} initial="hidden" animate="show">
+            <ResultCard result={response.results[0]} best icon={current?.icon} />
+          </m.div>
 
           {response.results.length > 1 && (
             <>
-              <div className="results-label">
-                <span className="eyebrow">Other possibilities</span>
+              <div className="mb-4 mt-8">
+                <Eyebrow>Other possibilities</Eyebrow>
               </div>
-              <div className="results-grid">
+              <m.div
+                className="grid grid-cols-1 gap-3.5 sm:grid-cols-2"
+                variants={stagger(0.06)}
+                initial="hidden"
+                animate="show"
+              >
                 {response.results.slice(1).map((r, i) => (
-                  <ResultCard key={`${r.item_id}-${i}`} result={r} index={i + 1} icon={current?.icon} />
+                  <ResultCard key={`${r.item_id}-${i}`} result={r} icon={current?.icon} />
                 ))}
-              </div>
+              </m.div>
             </>
           )}
-        </>
+        </div>
       )}
     </div>
   );

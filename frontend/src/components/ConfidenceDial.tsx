@@ -1,18 +1,37 @@
-/** Confidence as an aperture dial: a ring that closes toward focus as certainty
- *  rises, colour shifting cold → warm amber. Used only on the hero (best) card. */
+import { animate, m, useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
+
+/** Confidence as an aperture dial: a ring that fills toward focus as certainty
+ *  rises, colour shifting cold → warm amber, with a spring count-up. Hero only. */
 export default function ConfidenceDial({ value }: { value: number }) {
   const pct = Math.max(0, Math.min(100, Math.round(value)));
+  const reduce = useReducedMotion();
+  const [shown, setShown] = useState(reduce ? pct : 0);
+
   const color =
-    pct >= 75 ? "var(--amber)" : pct >= 45 ? "var(--violet-soft)" : "var(--faint)";
+    pct >= 75 ? "var(--color-amber)" : pct >= 45 ? "var(--color-violet-soft)" : "var(--color-faint)";
   const label = pct >= 75 ? "in focus" : pct >= 45 ? "coming into focus" : "still fuzzy";
 
   const r = 52;
-  const c = 2 * Math.PI * r;
-  const dash = (pct / 100) * c;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+
+  useEffect(() => {
+    if (reduce) {
+      setShown(pct);
+      return;
+    }
+    const controls = animate(0, pct, {
+      duration: 0.9,
+      ease: [0.2, 0.7, 0.2, 1],
+      onUpdate: (v) => setShown(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [pct, reduce]);
 
   return (
     <div
-      className="dial"
+      className="relative size-[120px]"
       role="meter"
       aria-valuenow={pct}
       aria-valuemin={0}
@@ -20,22 +39,27 @@ export default function ConfidenceDial({ value }: { value: number }) {
       aria-label={`Confidence ${pct} percent`}
     >
       <svg viewBox="0 0 120 120" width="120" height="120">
-        <circle className="dial-track" cx="60" cy="60" r={r} />
-        <circle
-          className="dial-fill"
+        <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={8} />
+        <m.circle
           cx="60"
           cy="60"
           r={r}
+          fill="none"
           stroke={color}
-          strokeDasharray={`${dash} ${c}`}
+          strokeWidth={8}
+          strokeLinecap="round"
+          strokeDasharray={circ}
           transform="rotate(-90 60 60)"
+          initial={{ strokeDashoffset: circ }}
+          animate={{ strokeDashoffset: circ - dash }}
+          transition={{ duration: 0.9, ease: [0.2, 0.7, 0.2, 1] }}
         />
       </svg>
-      <div className="dial-center">
-        <span className="dial-pct" style={{ color }}>
-          {pct}%
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+        <span className="font-mono text-[1.4rem] font-bold leading-none" style={{ color }}>
+          {shown}%
         </span>
-        <span className="dial-label">{label}</span>
+        <span className="text-[0.66rem] tracking-[0.04em] text-faint">{label}</span>
       </div>
     </div>
   );

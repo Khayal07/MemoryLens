@@ -1,66 +1,119 @@
+import { m } from "framer-motion";
 import { useState } from "react";
 import type { ResultItem } from "../lib/types";
-import ConfidenceMeter from "./ConfidenceMeter";
+import { cn } from "../lib/cn";
+import { developIn, spring } from "./motion/variants";
+import Badge from "./ui/Badge";
 import ConfidenceDial from "./ConfidenceDial";
+import ConfidenceMeter from "./ConfidenceMeter";
 
 interface Props {
   result: ResultItem;
   best?: boolean;
-  index: number;
   icon?: string | null;
 }
 
 /** Internal metadata keys that should never be shown as user-facing tags. */
 const HIDDEN_META = new Set(["source", "image_url", "source_url"]);
 
-export default function ResultCard({ result, best, index, icon }: Props) {
+export default function ResultCard({ result, best, icon }: Props) {
   const [imageFailed, setImageFailed] = useState(false);
   const byAI = result.metadata?.source === "gpt-knowledge";
   const showImage = result.image_url && !imageFailed && !byAI;
 
   const tags = Object.entries(result.metadata)
-    .filter(
-      ([k, v]) => !HIDDEN_META.has(k) && v !== null && v !== undefined && v !== "",
-    )
+    .filter(([k, v]) => !HIDDEN_META.has(k) && v !== null && v !== undefined && v !== "")
     .slice(0, 4);
 
+  const posterSize = best ? "w-[148px] h-[214px]" : "w-[84px] h-[120px]";
+
   return (
-    <article
-      className={`card${best ? " best" : ""}${byAI ? " ai" : ""}`}
-      style={{ animationDelay: `${Math.min(index * 80, 400)}ms` }}
+    <m.article
+      variants={developIn}
+      whileHover={best ? undefined : { y: -2 }}
+      transition={spring}
+      className={cn(
+        "grid rounded-lens border bg-raised",
+        best
+          ? "grid-cols-[148px_1fr] items-center gap-6 p-[26px] max-sm:grid-cols-1 max-sm:justify-items-center max-sm:text-center"
+          : "grid-cols-[84px_1fr] gap-4 p-4",
+        best
+          ? byAI
+            ? "border-amber/40 shadow-glow-amber ring-1 ring-amber/20 bg-gradient-to-b from-amber/[0.07] to-raised"
+            : "border-violet/40 shadow-glow ring-1 ring-violet/20 bg-gradient-to-b from-violet/[0.06] to-raised"
+          : "border-line",
+      )}
     >
       {showImage ? (
         <img
-          className="poster"
+          className={cn("rounded-[10px] border border-line object-cover bg-raised-2", posterSize)}
           src={result.image_url!}
           alt=""
           loading="lazy"
           onError={() => setImageFailed(true)}
         />
       ) : byAI ? (
-        <div className="poster ai-placeholder" aria-hidden="true">
-          <span className="ai-lens" />
+        <div
+          className={cn(
+            "flex items-center justify-center rounded-[10px] border border-amber/30",
+            "bg-[radial-gradient(circle_at_50%_40%,rgba(245,180,104,0.14),var(--color-raised-2))]",
+            posterSize,
+          )}
+          aria-hidden="true"
+        >
+          <span
+            className="relative aspect-square w-[44%] rounded-full border-2 border-amber
+              shadow-[0_0_0_3px_rgba(245,180,104,0.15)]
+              after:absolute after:inset-[22%] after:rounded-full
+              after:bg-[radial-gradient(circle_at_35%_30%,var(--color-amber),var(--color-violet))]"
+          />
         </div>
       ) : (
-        <div className="poster placeholder" aria-hidden="true">
+        <div
+          className={cn(
+            "flex items-center justify-center rounded-[10px] border border-line bg-raised-2 text-[1.8rem] text-faint",
+            posterSize,
+          )}
+          aria-hidden="true"
+        >
           {icon ?? "🎞"}
         </div>
       )}
 
-      <div className="card-body">
-        {byAI && <span className="ai-badge">✦ AI knowledge</span>}
+      <div className="min-w-0">
+        {byAI && (
+          <Badge tone="amber" className="mb-3">
+            ✦ AI knowledge
+          </Badge>
+        )}
 
         {best ? <ConfidenceDial value={result.confidence} /> : <ConfidenceMeter value={result.confidence} />}
 
-        <h3 className="card-title">{result.title}</h3>
+        <h3
+          className={cn(
+            "font-display font-semibold tracking-[-0.01em]",
+            best ? "mt-3 text-[1.6rem]" : "mt-2 text-[1.1rem]",
+          )}
+        >
+          {result.title}
+        </h3>
 
-        {result.reason && <p className="reason">{result.reason}</p>}
-        {result.description && <p className="desc">{result.description}</p>}
+        {result.reason && (
+          <p className="my-2 text-[0.95rem] text-ink">
+            <span className="mr-0.5 font-display text-violet-soft">“</span>
+            {result.reason}
+            <span className="ml-0.5 font-display text-violet-soft">”</span>
+          </p>
+        )}
+        {result.description && <p className="text-[0.9rem] text-muted">{result.description}</p>}
 
         {tags.length > 0 && (
-          <div className="meta">
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             {tags.map(([k, v]) => (
-              <span className="tag" key={k}>
+              <span
+                key={k}
+                className="rounded-md border border-line px-1.5 py-0.5 font-mono text-[0.7rem] text-muted"
+              >
                 {k}: {String(Array.isArray(v) ? v.join(", ") : v)}
               </span>
             ))}
@@ -68,11 +121,16 @@ export default function ResultCard({ result, best, index, icon }: Props) {
         )}
 
         {result.source_url && (
-          <a className="source" href={result.source_url} target="_blank" rel="noreferrer">
+          <a
+            className="mt-2.5 inline-block text-[0.82rem] text-violet-soft hover:underline"
+            href={result.source_url}
+            target="_blank"
+            rel="noreferrer"
+          >
             View source ↗
           </a>
         )}
       </div>
-    </article>
+    </m.article>
   );
 }

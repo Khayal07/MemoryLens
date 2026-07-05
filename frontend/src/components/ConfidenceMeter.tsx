@@ -1,22 +1,30 @@
+import { m } from "framer-motion";
+
 /** Confidence as a "focus meter": the fill widens with certainty and shifts from
- *  cold (still fuzzy) toward warm amber (in focus) — color encodes the number. */
+ *  cold (still fuzzy) toward warm amber (in focus). Used on the compact cards. */
 export default function ConfidenceMeter({ value }: { value: number }) {
   const pct = Math.round(value);
   const color =
-    pct >= 75 ? "var(--amber)" : pct >= 45 ? "var(--violet-soft)" : "var(--faint)";
+    pct >= 75 ? "var(--color-amber)" : pct >= 45 ? "var(--color-violet-soft)" : "var(--color-faint)";
   return (
     <div
-      className="focus"
+      className="mb-1 flex items-center gap-2.5"
       role="meter"
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={`Confidence ${pct} percent`}
     >
-      <div className="focus-track">
-        <div className="focus-fill" style={{ width: `${pct}%`, background: color }} />
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/[0.08]">
+        <m.div
+          className="h-full rounded-full"
+          style={{ background: color }}
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.6, ease: [0.2, 0.7, 0.2, 1] }}
+        />
       </div>
-      <span className="focus-pct" style={{ color }}>
+      <span className="min-w-[48px] text-right font-mono text-[0.8rem] font-bold" style={{ color }}>
         {pct}%
       </span>
     </div>

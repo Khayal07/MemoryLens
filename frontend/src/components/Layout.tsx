@@ -2,6 +2,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { Suspense } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
+import AuroraBackground from "./AuroraBackground";
 import PageTransition from "./motion/PageTransition";
 import Spinner from "./ui/Spinner";
 import { spring } from "./motion/variants";
@@ -17,6 +18,7 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <AuroraBackground />
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50
@@ -25,7 +27,7 @@ export default function Layout() {
         Skip to content
       </a>
 
-      <header className="sticky top-0 z-20 border-b border-line bg-night/70 backdrop-blur-lg">
+      <header className="sticky top-0 z-20 border-b border-glass-line bg-night/40 backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex h-16 max-w-[920px] items-center justify-between px-6">
           <Link
             to="/"

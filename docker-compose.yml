@@ -50,6 +50,10 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    # Sync deps on every start so newly added packages (e.g. tailwind) are
+    # always installed inside the container's node_modules volume, then run Vite
+    # on a fixed port so the URL is always http://localhost:5173.
+    command: sh -c "npm install && npm run dev -- --host --port 5173 --strictPort"
 
 volumes:
   pgdata:

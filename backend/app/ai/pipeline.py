@@ -7,6 +7,7 @@ The LLM only selects/explains among grounded candidates; results are always real
 catalog items. Confidence is computed from blended signals, not the model's claim."""
 
 import re
+import urllib.parse
 from functools import lru_cache
 
 import structlog
@@ -25,7 +26,7 @@ from app.ai.retriever import HybridRetriever
 from app.ai.types import Candidate
 from app.core.config import get_settings
 from app.domain.categories import CATEGORY_KEYS
-from app.infra.models import Category
+from app.infra.models import Category, Item
 from app.infra.omdb import fetch_poster
 from app.schemas.search import MismatchSuggestion, ResultItem, SearchResponse
 
@@ -53,6 +54,20 @@ def _year_from(detail: str | None) -> str | None:
     """Pull the first 4-digit year out of a free-form detail like "1957 / Lumet"."""
     match = _YEAR_RE.search(detail or "")
     return match.group(0) if match else None
+
+
+def _slug(title: str) -> str:
+    """Lowercase, keep [a-z0-9], collapse everything else to single hyphens, and cap
+    length so `gpt:<slug>` stays inside the external_id String(128) column."""
+    s = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    return s[:120] or "untitled"
+
+
+def _google_url(title: str, category: Category) -> str:
+    """A best-effort 'View source' for an answer that isn't in the catalog: a Google
+    search for the title within its category."""
+    q = urllib.parse.quote_plus(f"{title} {category.display_name}")
+    return f"https://www.google.com/search?q={q}"
 
 
 class SearchPipeline:
@@ -93,7 +108,7 @@ class SearchPipeline:
 
         if not candidates:
             # Nothing in the catalog resembled the memory — let the LLM name it.
-            results = self._maybe_add_freeform(category, cleaned, [], max_results)
+            results = self._maybe_add_freeform(db, category, cleaned, [], max_results)
             return SearchResponse(query=query, category=category_key, results=results)
 
         reranked = self.reranker.rerank(retrieval_query, candidates, top_n=self.rerank_top_n)
@@ -101,7 +116,7 @@ class SearchPipeline:
         results, suggestion = self._build_results(
             category_key, cleaned, reranked, reasoning, max_results
         )
-        results = self._maybe_add_freeform(category, cleaned, results, max_results)
+        results = self._maybe_add_freeform(db, category, cleaned, results, max_results)
         return SearchResponse(
             query=query, category=category_key, results=results, suggestion=suggestion
         )
@@ -164,7 +179,7 @@ class SearchPipeline:
         return None
 
     def _maybe_add_freeform(
-        self, category, query: str, results: list[ResultItem], max_results: int
+        self, db: Session, category, query: str, results: list[ResultItem], max_results: int
     ) -> list[ResultItem]:
         """When the grounded catalog gives no confident match, ask the LLM to name the
         real item from its own knowledge and promote that answer to the top. The weak
@@ -174,14 +189,17 @@ class SearchPipeline:
         top = max((r.confidence for r in results), default=0.0)
         if top >= self.freeform_confidence_floor:
             return results
-        item = self._identify_freeform(category, query)
+        item = self._identify_freeform(db, category, query)
         if item is None:
             return results
         return [item, *results][:max_results]
 
-    def _identify_freeform(self, category, query: str) -> ResultItem | None:
-        """Ungrounded identification: the LLM names the most likely real title. Returns
-        None on any failure or when the model can't identify anything."""
+    def _identify_freeform(self, db: Session, category, query: str) -> ResultItem | None:
+        """Ungrounded identification: the LLM names the most likely real title. The
+        answer is materialized as a lightweight catalog row (no embedding, so it stays
+        out of retrieval) which gives it a real item_id — the UI can then save it to a
+        collection and vote on it like any grounded result. Returns None on any failure
+        or when the model can't identify anything."""
         try:
             system = identify.SYSTEM_PROMPT.format(category=category.display_name)
             user = identify.build_user_prompt(category.display_name, query)
@@ -189,7 +207,8 @@ class SearchPipeline:
         except (LLMError, IdentifyParseError) as exc:
             log.warning("pipeline.identify_failed", error=str(exc))
             return None
-        if not ident.title.strip():
+        title = ident.title.strip()
+        if not title:
             return None
         # Ungrounded, so cap below certainty and flag the source for the UI.
         confidence = round(min(ident.confidence, 0.9) * 100, 1)
@@ -199,20 +218,67 @@ class SearchPipeline:
         image_url = None
         kind = _OMDB_KIND.get(category.key)
         if kind:
-            image_url = fetch_poster(ident.title.strip(), _year_from(ident.detail), kind)
+            image_url = fetch_poster(title, _year_from(ident.detail), kind)
         reason = ident.reason or None
         if _is_foreign_script(reason, query):
             reason = None
+
+        metadata = {"source": "gpt-knowledge", "detail": ident.detail}
+        source_url = _google_url(title, category)
+        item_id = self._materialize_freeform(
+            db, category, title, description, image_url, source_url, metadata
+        )
         return ResultItem(
-            item_id=0,
-            title=ident.title.strip(),
+            item_id=item_id,
+            title=title,
             description=description,
             image_url=image_url,
-            source_url=None,
-            metadata={"source": "gpt-knowledge", "detail": ident.detail},
+            source_url=source_url,
+            metadata=metadata,
             confidence=confidence,
             reason=reason,
         )
+
+    @staticmethod
+    def _materialize_freeform(
+        db: Session,
+        category,
+        title: str,
+        description: str,
+        image_url: str | None,
+        source_url: str,
+        metadata: dict,
+    ) -> int:
+        """Find-or-create a catalog row for a free-form answer, keyed by
+        (category_id, "gpt:<slug>") so repeated searches reuse one row. No embedding is
+        created, so the row is invisible to retrieval. Falls back to item_id=0 on any DB
+        error so a search never fails on a materialize hiccup."""
+        external_id = f"gpt:{_slug(title)}"
+        try:
+            item = db.execute(
+                select(Item).where(
+                    Item.category_id == category.id, Item.external_id == external_id
+                )
+            ).scalar_one_or_none()
+            if item is None:
+                item = Item(
+                    category_id=category.id,
+                    external_id=external_id,
+                    title=title,
+                    description=description,
+                    item_metadata=metadata,
+                    image_url=image_url,
+                    source_url=source_url,
+                )
+                db.add(item)
+            elif image_url and not item.image_url:
+                item.image_url = image_url  # backfill a poster we now have
+            db.flush()
+            return item.id
+        except Exception as exc:  # pragma: no cover - defensive
+            log.warning("pipeline.materialize_failed", error=str(exc))
+            db.rollback()
+            return 0
 
     def _build_results(
         self,

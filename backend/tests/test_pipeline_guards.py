@@ -1,4 +1,4 @@
-from app.ai.pipeline import _is_foreign_script
+from app.ai.pipeline import _is_foreign_script, _slug
 
 
 def test_cyrillic_reply_to_latin_query_is_foreign():
@@ -23,3 +23,17 @@ def test_latin_reply_is_never_foreign():
 def test_empty_text_is_never_foreign():
     assert not _is_foreign_script("", "фильм")
     assert not _is_foreign_script(None, "фильм")
+
+
+def test_slug_basic():
+    assert _slug("Mr. Robot") == "mr-robot"
+    assert _slug("Counting Stars") == "counting-stars"
+
+
+def test_slug_collapses_and_trims():
+    assert _slug("  V for Vendetta!! ") == "v-for-vendetta"
+
+
+def test_slug_caps_length_and_never_empty():
+    assert len(_slug("x" * 400)) <= 120
+    assert _slug("!!!") == "untitled"

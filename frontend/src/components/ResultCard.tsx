@@ -46,11 +46,11 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
             : "shadow-glow ring-1 ring-violet/30 border-violet/40"),
       )}
     >
-      {!byAI && (
-        <div className="absolute right-3 top-3 z-30">
-          <SaveButton itemId={result.item_id} />
-        </div>
-      )}
+      {/* Free-form AI answers are materialized as real catalog rows, so they carry a
+          real item_id and can be saved too; SaveButton self-hides when item_id <= 0. */}
+      <div className="absolute right-3 top-3 z-30">
+        <SaveButton itemId={result.item_id} />
+      </div>
       {showImage ? (
         <img
           className={cn("rounded-[10px] border border-glass-line object-cover", posterSize)}
@@ -125,7 +125,7 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
           </a>
         )}
 
-        {!byAI && searchId !== undefined && (
+        {searchId !== undefined && (
           <FeedbackButtons searchId={searchId} itemId={result.item_id} />
         )}
       </div>

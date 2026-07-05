@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import MismatchBanner from "../components/MismatchBanner";
 import ResultCard from "../components/ResultCard";
+import SimilarItems from "../components/SimilarItems";
 import Button from "../components/ui/Button";
 import EmptyState from "../components/ui/EmptyState";
 import Eyebrow from "../components/ui/Eyebrow";
@@ -39,6 +40,9 @@ export default function Search() {
 
   const response = mutation.data;
   const error = mutation.error as ApiError | null;
+  // Similar items hang off the best *grounded* match; a free-form hero (item_id 0)
+  // has no catalog neighbours, so fall through to the first real catalog result.
+  const bestGrounded = response?.results.find((r) => r.item_id > 0);
 
   return (
     <div>
@@ -165,6 +169,8 @@ export default function Search() {
               </m.div>
             </>
           )}
+
+          {bestGrounded && <SimilarItems itemId={bestGrounded.item_id} icon={current?.icon} />}
         </div>
       )}
     </div>

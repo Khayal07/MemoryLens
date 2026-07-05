@@ -20,6 +20,15 @@ export interface MismatchSuggestion {
   message: string;
 }
 
+export interface SimilarItem {
+  item_id: number;
+  title: string;
+  description: string;
+  image_url: string | null;
+  source_url: string | null;
+  metadata: Record<string, unknown>;
+}
+
 export interface SearchResponse {
   query: string;
   category: string;

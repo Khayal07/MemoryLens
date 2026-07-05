@@ -14,5 +14,9 @@ export default defineConfig({
     proxy: {
       "/api": apiTarget,
     },
+    // Bind-mounted source on a Windows/WSL host doesn't emit inotify events into
+    // the Linux container, so Vite never sees edits and serves stale transforms.
+    // Poll for changes so HMR actually works under Docker Desktop.
+    watch: { usePolling: true, interval: 300 },
   },
 });

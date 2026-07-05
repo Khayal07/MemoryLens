@@ -2,6 +2,7 @@ import type {
   Category,
   SearchResponse,
   SearchSummary,
+  SimilarItem,
   Tokens,
   User,
 } from "./types";
@@ -75,4 +76,6 @@ export const api = {
   me: () => request<User>("/auth/me"),
 
   history: () => request<SearchSummary[]>("/searches"),
+
+  similar: (itemId: number) => request<SimilarItem[]>(`/items/${itemId}/similar`),
 };

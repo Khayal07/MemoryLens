@@ -13,6 +13,25 @@ from app.core.config import get_settings
 from app.infra.models import Item, ItemEmbedding
 
 
+def find_similar(db: Session, item_id: int, k: int = 6) -> list[Item]:
+    """Nearest catalog neighbours of an item by embedding cosine distance, within the
+    same category and excluding the item itself. Powers the "more like this" section.
+    Returns [] if the item or its embedding is missing (e.g. a free-form answer)."""
+    source = db.get(Item, item_id)
+    source_emb = db.get(ItemEmbedding, item_id)
+    if source is None or source_emb is None:
+        return []
+    distance = ItemEmbedding.embedding.cosine_distance(source_emb.embedding).label("distance")
+    rows = db.execute(
+        select(Item)
+        .join(ItemEmbedding, ItemEmbedding.item_id == Item.id)
+        .where(Item.category_id == source.category_id, Item.id != item_id)
+        .order_by(distance)
+        .limit(k)
+    ).scalars().all()
+    return list(rows)
+
+
 class HybridRetriever:
     def __init__(self, top_vector: int = 50, top_keyword: int = 50) -> None:
         self.embedder = get_embedder()

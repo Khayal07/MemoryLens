@@ -60,9 +60,9 @@ class FakeDB:
 class FakeCategory:
     id = 1
     display_name = "Songs"
-    # A category with no free-form image source (not movies/tv/actors/songs), so these
-    # tests never hit OMDb / TMDB / iTunes over the network.
-    key = "books"
+    # A key outside every free-form image source set (all 6 real categories now have
+    # one), so these tests never hit OMDb / TMDB / iTunes / OpenLibrary / RAWG.
+    key = "misc"
 
 
 def _identify_payload(title="Counting Stars", conf=0.82):

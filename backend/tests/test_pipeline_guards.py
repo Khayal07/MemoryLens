@@ -6,9 +6,17 @@ def test_artist_from_picks_name_over_year():
     assert _artist_from("2013, OneRepublic") == "OneRepublic"
 
 
+def test_artist_from_handles_slashes_and_role_words():
+    # Free-form book/song details are often slash-separated with a trailing role label.
+    assert _artist_from("1925 / Franz Kafka / author") == "Franz Kafka"
+    assert _artist_from("George Orwell / 1949") == "George Orwell"
+    assert _artist_from("1977 / Queen / band / song") == "Queen"
+
+
 def test_artist_from_none_when_empty_or_only_year():
     assert _artist_from(None) is None
     assert _artist_from("2013") is None
+    assert _artist_from("1925 / author") is None
 
 
 def test_cyrillic_reply_to_latin_query_is_slip():

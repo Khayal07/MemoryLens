@@ -29,6 +29,8 @@ from app.domain.categories import CATEGORY_KEYS
 from app.infra.models import Category, Item
 from app.infra.itunes import fetch_song_cover
 from app.infra.omdb import fetch_poster
+from app.infra.openlibrary import fetch_book_cover
+from app.infra.rawg import fetch_game_image
 from app.infra.tmdb import fetch_person_image
 from app.schemas.search import MismatchSuggestion, ResultItem, SearchResponse
 
@@ -49,9 +51,18 @@ _OMDB_KIND = {"movies": "movie", "tv": "series"}
 _PERSON_KEYS = {"actors"}
 # Music categories: a free-form answer's "poster" is iTunes album cover art.
 _SONG_KEYS = {"songs"}
+# Book categories: OpenLibrary cover art. Game categories: RAWG key art.
+_BOOK_KEYS = {"books"}
+_GAME_KEYS = {"games"}
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
 # Shown when the LLM picks a grounded match but returns no explanation for it.
 _FALLBACK_REASON = "A close match in the catalog for your memory."
+# Generic role labels a free-form `detail` may carry next to the real creator name, so
+# _artist_from skips them when hunting for the artist/author.
+_ROLE_WORDS = {
+    "author", "artist", "band", "song", "singer", "singer-songwriter", "writer",
+    "composer", "novel", "book", "film", "movie", "director", "actor", "actress",
+}
 
 
 def _is_language_slip(text: str | None, query: str) -> bool:
@@ -76,11 +87,13 @@ def _year_from(detail: str | None) -> str | None:
 
 
 def _artist_from(detail: str | None) -> str | None:
-    """Pull the artist out of a free-form song detail like "OneRepublic, 2013" — the
-    first comma-segment that isn't just a year, used to sharpen the cover-art search."""
-    for part in (detail or "").split(","):
+    """Pull the creator (artist/author) out of a free-form detail to sharpen a cover-art
+    search. Details vary — "OneRepublic, 2013", "1925 / Franz Kafka / author",
+    "George Orwell / 1949" — so split on commas AND slashes and return the first segment
+    that's neither a bare year nor a generic role word."""
+    for part in re.split(r"[,/]", detail or ""):
         p = part.strip()
-        if p and not _YEAR_RE.fullmatch(p):
+        if p and not _YEAR_RE.fullmatch(p) and p.lower() not in _ROLE_WORDS:
             return p
     return None
 
@@ -261,16 +274,19 @@ class SearchPipeline:
         confidence = round(min(ident.confidence, 0.9) * 100, 1)
         description = ident.detail or "Identified from world knowledge — not in the catalog."
         # The free-form hero has no catalog poster; give the prominent Best Match a real
-        # image so it isn't a blank frame — an OMDb poster for films/series, a TMDB
-        # profile photo for people, iTunes album art for songs. Best-effort.
+        # image so it isn't a blank frame, from the right source per category. Best-effort.
         image_url = None
         kind = _OMDB_KIND.get(category.key)
         if kind:
-            image_url = fetch_poster(title, _year_from(ident.detail), kind)
+            image_url = fetch_poster(title, _year_from(ident.detail), kind)  # films/series
         elif category.key in _PERSON_KEYS:
-            image_url = fetch_person_image(title)
+            image_url = fetch_person_image(title)  # TMDB profile photo
         elif category.key in _SONG_KEYS:
-            image_url = fetch_song_cover(title, _artist_from(ident.detail))
+            image_url = fetch_song_cover(title, _artist_from(ident.detail))  # iTunes art
+        elif category.key in _BOOK_KEYS:
+            image_url = fetch_book_cover(title, _artist_from(ident.detail))  # OpenLibrary
+        elif category.key in _GAME_KEYS:
+            image_url = fetch_game_image(title)  # RAWG key art
         reason = ident.reason or None
         if _is_language_slip(reason, query):
             reason = None

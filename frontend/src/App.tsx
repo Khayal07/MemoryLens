@@ -2,6 +2,7 @@ import { lazy } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/Layout";
 import Protected from "./components/Protected";
+import { useAuth } from "./features/auth/AuthContext";
 
 // Route-level code splitting — each page ships in its own chunk.
 const CategorySelect = lazy(() => import("./pages/CategorySelect"));
@@ -14,12 +15,20 @@ const SharedResult = lazy(() => import("./pages/SharedResult"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Constellation = lazy(() => import("./pages/Constellation"));
 const Challenge = lazy(() => import("./pages/Challenge"));
+const Landing = lazy(() => import("./pages/Landing"));
+
+/** Signed-in users land on the category grid; visitors get the cinematic story. */
+function HomeGate() {
+  const { isAuthenticated, ready } = useAuth();
+  if (!ready) return null; // AuthProvider is still restoring the session
+  return isAuthenticated ? <CategorySelect /> : <Landing />;
+}
 
 const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: "/", element: <CategorySelect /> },
+      { path: "/", element: <HomeGate /> },
       { path: "/search/:category", element: <Search /> },
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },

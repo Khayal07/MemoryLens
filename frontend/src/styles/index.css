@@ -70,6 +70,9 @@
   body {
     margin: 0;
     padding: 0;
+    /* full-bleed sections (landing) use w-screen, which includes the scrollbar
+       gutter — clip the sliver instead of showing a horizontal scrollbar */
+    overflow-x: clip;
   }
 
   body {

@@ -13,6 +13,7 @@ const Collections = lazy(() => import("./pages/Collections"));
 const SharedResult = lazy(() => import("./pages/SharedResult"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Constellation = lazy(() => import("./pages/Constellation"));
+const Challenge = lazy(() => import("./pages/Challenge"));
 
 const router = createBrowserRouter([
   {
@@ -52,6 +53,14 @@ const router = createBrowserRouter([
         element: (
           <Protected>
             <Constellation />
+          </Protected>
+        ),
+      },
+      {
+        path: "/challenge",
+        element: (
+          <Protected>
+            <Challenge />
           </Protected>
         ),
       },

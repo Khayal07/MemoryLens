@@ -72,6 +72,29 @@ export interface Collection {
   items: SavedItem[];
 }
 
+export interface ChallengeAnswer {
+  title: string;
+  image_url: string | null;
+  source_url: string | null;
+}
+
+export interface ChallengeState {
+  number: number;
+  date: string;
+  category: string;
+  /** Only the clues earned so far (finished → all of them). */
+  clues: string[];
+  clues_total: number;
+  guesses_used: number;
+  guess_limit: number;
+  solved: boolean;
+  finished: boolean;
+  /** Set only on the response to a guess. */
+  correct: boolean | null;
+  /** Revealed only when finished. */
+  answer: ChallengeAnswer | null;
+}
+
 export interface Tokens {
   access_token: string;
   refresh_token: string;

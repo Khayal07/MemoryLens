@@ -1,10 +1,12 @@
 """SQLAlchemy 2.0 ORM models. The vector dimension matches the embedding model
 (bge-small-en-v1.5 → 384)."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
+    Boolean,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -154,6 +156,45 @@ class ResultFeedback(Base):
         ForeignKey("items.id", ondelete="CASCADE"), index=True
     )
     vote: Mapped[int] = mapped_column(SmallInteger)  # +1 up, -1 down
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class DailyChallenge(Base):
+    """One secret catalog item per day with 3 pre-generated, progressively revealing
+    clues (LLM writes them once; every player reads the stored copy)."""
+
+    __tablename__ = "daily_challenges"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    challenge_date: Mapped[date] = mapped_column(Date, unique=True, index=True)
+    item_id: Mapped[int] = mapped_column(ForeignKey("items.id", ondelete="CASCADE"))
+    clues: Mapped[list] = mapped_column(JSONB, default=list)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    item: Mapped["Item"] = relationship()
+
+
+class ChallengeAttempt(Base):
+    """A user's progress on one day's challenge — guesses used and whether solved."""
+
+    __tablename__ = "challenge_attempts"
+    __table_args__ = (
+        UniqueConstraint("user_id", "challenge_id", name="uq_attempt_user_challenge"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    challenge_id: Mapped[int] = mapped_column(
+        ForeignKey("daily_challenges.id", ondelete="CASCADE"), index=True
+    )
+    guesses_used: Mapped[int] = mapped_column(Integer, default=0)
+    solved: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

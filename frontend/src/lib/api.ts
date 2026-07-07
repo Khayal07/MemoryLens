@@ -1,6 +1,7 @@
 import type {
   AnalyticsOverview,
   Category,
+  ChallengeState,
   Collection,
   ConstellationResponse,
   SearchResponse,
@@ -119,4 +120,12 @@ export const api = {
   analytics: () => request<AnalyticsOverview>("/analytics"),
 
   constellation: () => request<ConstellationResponse>("/constellation"),
+
+  challengeToday: () => request<ChallengeState>("/challenge/today"),
+
+  challengeGuess: (guess: string) =>
+    request<ChallengeState>("/challenge/guess", {
+      method: "POST",
+      body: JSON.stringify({ guess }),
+    }),
 };

@@ -19,6 +19,7 @@ from app.ai.clarify import ClarifyParseError, parse_clarification
 from app.ai.confidence import compute_breakdown, compute_confidence
 from app.ai.identify import IdentifyParseError, parse_identification
 from app.ai.llm import LLMClient, LLMError
+from app.ai.matching import same_title, slug
 from app.ai.prompts import clarify, hyde, identify, translate
 from app.ai.prompts.reasoning import SYSTEM_PROMPT, build_user_prompt
 from app.ai.reasoning import LLMReasoning, ReasoningParseError, parse_reasoning
@@ -99,19 +100,10 @@ def _artist_from(detail: str | None) -> str | None:
     return None
 
 
-def _slug(title: str) -> str:
-    """Lowercase, keep [a-z0-9], collapse everything else to single hyphens, and cap
-    length so `gpt:<slug>` stays inside the external_id String(128) column."""
-    s = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
-    return s[:120] or "untitled"
-
-
-def _same_title(a: str, b: str) -> bool:
-    """Loose title equality for grey-zone freeform vs grounded comparison: slug-normalize
-    and treat one being contained in the other as a match (so "Hello" ≈ "Hello from the
-    Other Side", but "We Will Rock You" ≠ "Don't Stop Believin'")."""
-    sa, sb = _slug(a), _slug(b)
-    return sa == sb or sa in sb or sb in sa
+# Shared with the daily challenge's guess checking (app/ai/matching.py); the private
+# aliases keep this module's call sites and existing tests unchanged.
+_slug = slug
+_same_title = same_title
 
 
 def _google_url(title: str, category: Category) -> str:

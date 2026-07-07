@@ -61,6 +61,16 @@ def _persist(
     return search.id
 
 
+def _top_result(snapshot: dict | None) -> tuple[str | None, str | None, float | None]:
+    """Best-match title/poster/confidence from a search's response snapshot, for the
+    history timeline. Searches predating the snapshot column yield (None, None, None)."""
+    results = (snapshot or {}).get("results") or []
+    if not results or not isinstance(results[0], dict):
+        return None, None, None
+    best = results[0]
+    return best.get("title"), best.get("image_url"), best.get("confidence")
+
+
 def list_history(db: Session, user_id: int, limit: int = 50) -> list[dict]:
     rows = db.execute(
         select(
@@ -69,6 +79,9 @@ def list_history(db: Session, user_id: int, limit: int = 50) -> list[dict]:
             Search.raw_query,
             Search.created_at,
             func.count(SearchResult.id),
+            # Selecting by Search.id group is fine: PG derives the rest of the
+            # searches columns from the PK (functional dependency).
+            Search.response_json,
         )
         .join(Category, Category.id == Search.category_id)
         .outerjoin(SearchResult, SearchResult.search_id == Search.id)
@@ -77,13 +90,19 @@ def list_history(db: Session, user_id: int, limit: int = 50) -> list[dict]:
         .order_by(Search.created_at.desc())
         .limit(limit)
     ).all()
-    return [
-        {
-            "id": sid,
-            "category": key,
-            "query": q,
-            "created_at": created,
-            "result_count": count,
-        }
-        for sid, key, q, created, count in rows
-    ]
+    out = []
+    for sid, key, q, created, count, snapshot in rows:
+        top_title, top_image, top_confidence = _top_result(snapshot)
+        out.append(
+            {
+                "id": sid,
+                "category": key,
+                "query": q,
+                "created_at": created,
+                "result_count": count,
+                "top_title": top_title,
+                "top_image": top_image,
+                "top_confidence": top_confidence,
+            }
+        )
+    return out

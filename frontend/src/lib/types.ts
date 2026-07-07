@@ -47,6 +47,10 @@ export interface SearchSummary {
   query: string;
   created_at: string;
   result_count: number;
+  /** Best match from the snapshot; null on searches predating it. */
+  top_title?: string | null;
+  top_image?: string | null;
+  top_confidence?: number | null;
 }
 
 export interface SavedItem {

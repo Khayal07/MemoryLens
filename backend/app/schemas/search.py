@@ -50,6 +50,11 @@ class SearchSummary(BaseModel):
     query: str
     created_at: datetime
     result_count: int
+    # Best match from the response snapshot, for the history timeline view.
+    # None on searches that predate the snapshot column.
+    top_title: str | None = None
+    top_image: str | None = None
+    top_confidence: float | None = None
 
 
 class ShareResponse(BaseModel):

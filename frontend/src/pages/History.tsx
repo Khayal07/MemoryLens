@@ -1,15 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { m } from "framer-motion";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import MemoryLane from "../components/MemoryLane";
 import Eyebrow from "../components/ui/Eyebrow";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import { developIn, fadeUp, stagger } from "../components/motion/variants";
+import { cn } from "../lib/cn";
 import { api } from "../lib/api";
 
 export default function History() {
   const { data, isLoading, isError } = useQuery({ queryKey: ["history"], queryFn: api.history });
   const navigate = useNavigate();
+  const [view, setView] = useState<"lane" | "list">("lane");
 
   return (
     <div>
@@ -37,6 +41,26 @@ export default function History() {
         >
           What you've looked for
         </m.h1>
+
+        <m.div variants={developIn} className="mt-4 flex gap-1.5" role="tablist" aria-label="History view">
+          {(["lane", "list"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              role="tab"
+              aria-selected={view === v}
+              onClick={() => setView(v)}
+              className={cn(
+                "rounded-full px-3.5 py-1.5 text-[0.82rem] font-medium transition-colors",
+                view === v
+                  ? "glass border-violet/50 text-ink shadow-glow"
+                  : "text-muted hover:text-ink",
+              )}
+            >
+              {v === "lane" ? "◧ Memory Lane" : "☰ List"}
+            </button>
+          ))}
+        </m.div>
       </m.section>
 
       {isLoading && (
@@ -60,7 +84,9 @@ export default function History() {
         />
       )}
 
-      {data && data.length > 0 && (
+      {data && data.length > 0 && view === "lane" && <MemoryLane items={data} />}
+
+      {data && data.length > 0 && view === "list" && (
         <m.div
           className="flex flex-col gap-2.5"
           variants={stagger(0.05)}

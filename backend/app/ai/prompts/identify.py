@@ -8,6 +8,11 @@ Using your own knowledge, name the single most likely REAL, existing {category} 
 that the memory describes. It must be a real title that exists — never invent one. \
 If you genuinely cannot identify it, set "title" to an empty string.
 
+The answer MUST itself be a {category} entry — never a related work. If the category \
+is Actors, name the PERSON (e.g. "Carrie-Anne Moss"), not a film they appeared in. \
+If it is Songs, name the song, not the artist. If it is Books, name the book, not the \
+author. Put that name in `title`.
+
 Write `detail` and `reason` in the SAME language the user wrote the MEMORY in \
 (e.g. Azerbaijani memory → Azerbaijani wording). Keep the real `title` in its \
 original form.

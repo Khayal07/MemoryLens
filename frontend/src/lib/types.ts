@@ -86,6 +86,26 @@ export interface LabelCount {
   count: number;
 }
 
+export interface ConstellationNode {
+  id: number;
+  title: string;
+  category: string;
+  image_url: string | null;
+  source_url: string | null;
+  seen_count: number;
+}
+
+export interface ConstellationEdge {
+  a: number;
+  b: number;
+  weight: number;
+}
+
+export interface ConstellationResponse {
+  nodes: ConstellationNode[];
+  edges: ConstellationEdge[];
+}
+
 export interface AnalyticsOverview {
   total_searches: number;
   searches_last_7d: number;

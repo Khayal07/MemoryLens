@@ -2,6 +2,7 @@ import type {
   AnalyticsOverview,
   Category,
   Collection,
+  ConstellationResponse,
   SearchResponse,
   SearchSummary,
   SimilarItem,
@@ -116,4 +117,6 @@ export const api = {
   getShared: (token: string) => request<SearchResponse>(`/share/${token}`),
 
   analytics: () => request<AnalyticsOverview>("/analytics"),
+
+  constellation: () => request<ConstellationResponse>("/constellation"),
 };

@@ -58,6 +58,9 @@ export default function Layout() {
                 <Link to="/analytics" className={navLink}>
                   Analytics
                 </Link>
+                <Link to="/constellation" className={navLink}>
+                  Constellation
+                </Link>
                 <button
                   className={navLink}
                   onClick={() => {

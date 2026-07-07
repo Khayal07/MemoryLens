@@ -15,10 +15,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai.cleaning import clean_query, validate_query
+from app.ai.clarify import ClarifyParseError, parse_clarification
 from app.ai.confidence import compute_breakdown, compute_confidence
 from app.ai.identify import IdentifyParseError, parse_identification
 from app.ai.llm import LLMClient, LLMError
-from app.ai.prompts import hyde, identify, translate
+from app.ai.prompts import clarify, hyde, identify, translate
 from app.ai.prompts.reasoning import SYSTEM_PROMPT, build_user_prompt
 from app.ai.reasoning import LLMReasoning, ReasoningParseError, parse_reasoning
 from app.ai.reranker import get_reranker
@@ -132,6 +133,8 @@ class SearchPipeline:
         freeform_enabled: bool = True,
         freeform_confidence_floor: float = 65.0,
         freeform_grey_margin: float = 8.0,
+        clarify_enabled: bool = True,
+        clarify_floor: float = 65.0,
     ) -> None:
         self.retriever = retriever
         self.reranker = reranker
@@ -142,6 +145,8 @@ class SearchPipeline:
         self.freeform_enabled = freeform_enabled
         self.freeform_confidence_floor = freeform_confidence_floor
         self.freeform_grey_margin = freeform_grey_margin
+        self.clarify_enabled = clarify_enabled
+        self.clarify_floor = clarify_floor
 
     def run(
         self, db: Session, category_key: str, query: str, max_results: int = 5
@@ -161,7 +166,12 @@ class SearchPipeline:
         if not candidates:
             # Nothing in the catalog resembled the memory — let the LLM name it.
             results = self._maybe_add_freeform(db, category, cleaned, [], max_results)
-            return SearchResponse(query=query, category=category_key, results=results)
+            return SearchResponse(
+                query=query,
+                category=category_key,
+                results=results,
+                clarifying_question=self._maybe_clarify(category, cleaned, results),
+            )
 
         reranked = self.reranker.rerank(retrieval_query, candidates, top_n=self.rerank_top_n)
         reasoning = self._reason(category, cleaned, reranked)
@@ -170,7 +180,13 @@ class SearchPipeline:
         )
         results = self._maybe_add_freeform(db, category, cleaned, results, max_results)
         return SearchResponse(
-            query=query, category=category_key, results=results, suggestion=suggestion
+            query=query,
+            category=category_key,
+            results=results,
+            suggestion=suggestion,
+            # Akinator: judged on the FINAL results (free-form hero included) — asked
+            # only while the answer is genuinely unsettled (see _maybe_clarify).
+            clarifying_question=self._maybe_clarify(category, cleaned, results),
         )
 
     def _to_retrieval_query(self, query: str) -> str:
@@ -229,6 +245,42 @@ class SearchPipeline:
                 log.warning("pipeline.llm_failed", error=str(exc))
                 return None
         return None
+
+    def _maybe_clarify(
+        self, category, query: str, results: list[ResultItem]
+    ) -> str | None:
+        """Akinator mode: when the final answer is still uncertain, ask the LLM for ONE
+        clarifying question the user can answer to refine the search. Certainty means
+        either a grounded top result at/above `clarify_floor`, or a free-form hero the
+        catalog CORROBORATES (its best grounded alternative names the same title) — an
+        uncorroborated world-knowledge guess is exactly when one more detail helps.
+        Best-effort — any LLM failure, an empty question, or a language slip just
+        drops the feature."""
+        if not self.clarify_enabled:
+            return None
+        if results:
+            best = results[0]
+            if best.metadata.get("source") == "gpt-knowledge":
+                grounded = next(
+                    (r for r in results[1:] if r.metadata.get("source") != "gpt-knowledge"),
+                    None,
+                )
+                if grounded is not None and _same_title(best.title, grounded.title):
+                    return None  # catalog agrees with the AI's answer — settled
+            elif best.confidence >= self.clarify_floor:
+                return None  # confident grounded match
+        try:
+            system = clarify.SYSTEM_PROMPT.format(category=category.display_name)
+            user = clarify.build_user_prompt(
+                category.display_name, query, [r.title for r in results[:5]]
+            )
+            question = parse_clarification(self.llm.complete_json(system, user)).question.strip()
+        except (LLMError, ClarifyParseError) as exc:
+            log.warning("pipeline.clarify_failed", error=str(exc))
+            return None
+        if not question or _is_language_slip(question, query):
+            return None
+        return question
 
     def _maybe_add_freeform(
         self, db: Session, category, query: str, results: list[ResultItem], max_results: int
@@ -456,4 +508,6 @@ def get_pipeline() -> SearchPipeline:
         freeform_enabled=settings.freeform_enabled,
         freeform_confidence_floor=settings.freeform_confidence_floor,
         freeform_grey_margin=settings.freeform_grey_margin,
+        clarify_enabled=settings.clarify_enabled,
+        clarify_floor=settings.clarify_floor,
     )

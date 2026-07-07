@@ -39,6 +39,8 @@ export interface SearchResponse {
   search_id: number;
   results: ResultItem[];
   suggestion: MismatchSuggestion | null;
+  // Akinator mode: one follow-up question when the grounded match was weak.
+  clarifying_question?: string | null;
 }
 
 export interface SearchSummary {

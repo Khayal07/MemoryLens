@@ -1,7 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { m } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import ClarifyBubble from "../components/ClarifyBubble";
 import FragmentBoard from "../components/FragmentBoard";
 import MismatchBanner from "../components/MismatchBanner";
 import ResultCard from "../components/ResultCard";
@@ -37,12 +38,28 @@ export default function Search() {
   const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: api.categories });
   const current = categories?.find((c) => c.key === category);
 
+  // Akinator mode: the backend attaches one clarifying question to a weak search;
+  // answers are folded into re-searches client-side (stateless backend), max 2 rounds.
+  const [baseQuery, setBaseQuery] = useState("");
+  const [clarifyLog, setClarifyLog] = useState<{ q: string; a: string }[]>([]);
+
   const mutation = useMutation({ mutationFn: (q: string) => api.search(category, q) });
 
   function submit(text: string) {
     const q = text.trim().slice(0, 1000);
     if (q.length < 3) return;
+    setBaseQuery(q);
+    setClarifyLog([]);
     mutation.mutate(q);
+  }
+
+  function answerClarify(answer: string) {
+    const question = mutation.data?.clarifying_question;
+    if (!question) return;
+    const log = [...clarifyLog, { q: question, a: answer }];
+    setClarifyLog(log);
+    const refined = log.map((r) => `. Clarification: ${r.q} → ${r.a}`).join("");
+    mutation.mutate((baseQuery + refined).slice(0, 1000));
   }
 
   function submitFragments() {
@@ -192,6 +209,34 @@ export default function Search() {
             navigate(`/search/${cat}`);
           }}
         />
+      )}
+
+      <AnimatePresence>
+        {response?.clarifying_question && clarifyLog.length < 2 && (
+          <ClarifyBubble
+            key={response.clarifying_question}
+            question={response.clarifying_question}
+            onAnswer={answerClarify}
+            disabled={mutation.isPending}
+          />
+        )}
+      </AnimatePresence>
+
+      {clarifyLog.length > 0 && response && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {clarifyLog.map((r, i) => (
+            <m.span
+              key={`${r.q}-${i}`}
+              variants={fadeUp}
+              initial="hidden"
+              animate="show"
+              className="glass max-w-full truncate rounded-full px-3 py-1.5 text-[0.8rem] text-muted"
+              title={`${r.q} → ${r.a}`}
+            >
+              <span className="text-amber">{r.q}</span> → {r.a}
+            </m.span>
+          ))}
+        </div>
       )}
 
       {response && response.results.length === 0 && (

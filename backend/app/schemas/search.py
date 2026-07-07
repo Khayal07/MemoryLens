@@ -42,6 +42,9 @@ class SearchResponse(BaseModel):
     search_id: int = 0
     results: list[ResultItem] = Field(default_factory=list)
     suggestion: MismatchSuggestion | None = None
+    # Akinator mode: ONE follow-up question attached when the grounded match is weak;
+    # the client re-searches with the answer folded into the query. None when confident.
+    clarifying_question: str | None = None
 
 
 class SearchSummary(BaseModel):

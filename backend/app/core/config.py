@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     # a *different* title (the grounded match was likely wrong). Same title → keep the
     # grounded row so its poster/source survive.
     freeform_grey_margin: float = 8.0
+    # Akinator mode: when the best grounded match is below this (0..100), attach ONE
+    # LLM-written clarifying question to the response; the frontend folds the user's
+    # answer back into a refined re-search.
+    clarify_enabled: bool = True
+    clarify_floor: float = 65.0
 
     @property
     def cors_origin_list(self) -> list[str]:

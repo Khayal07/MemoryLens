@@ -15,6 +15,34 @@ export const developIn: Variants = {
   },
 };
 
+/** A poster "develops" like a darkroom print: heavy blur + monochrome resolving into
+ *  full colour while it settles from a slight zoom. Runs once the image has loaded. */
+export const photoDevelop: Variants = {
+  hidden: { opacity: 0, scale: 1.06, filter: "blur(24px) grayscale(1) brightness(0.6)" },
+  show: {
+    opacity: 1,
+    scale: 1,
+    filter: "blur(0px) grayscale(0) brightness(1)",
+    transition: { duration: 1.2, ease: [0.25, 0.6, 0.2, 1] },
+  },
+};
+
+/** Quicker, subtler develop for the compact alternative cards. */
+export const photoDevelopSoft: Variants = {
+  hidden: { opacity: 0, filter: "blur(10px) grayscale(1) brightness(0.75)" },
+  show: {
+    opacity: 1,
+    filter: "blur(0px) grayscale(0) brightness(1)",
+    transition: { duration: 0.6, ease: [0.2, 0.7, 0.2, 1] },
+  },
+};
+
+/** For posterless heroes: the aurora aperture blooms in instead of a photo developing. */
+export const apertureBloom: Variants = {
+  hidden: { opacity: 0, scale: 0.85 },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.9, ease: [0.2, 0.7, 0.2, 1] } },
+};
+
 /** Simpler fade+rise for elements where blur is too heavy. */
 export const fadeUp: Variants = {
   hidden: { opacity: 0, y: 10 },

@@ -2,7 +2,7 @@ import { m } from "framer-motion";
 import { useState } from "react";
 import type { ResultItem } from "../lib/types";
 import { cn } from "../lib/cn";
-import { developIn } from "./motion/variants";
+import { apertureBloom, developIn, photoDevelop, photoDevelopSoft } from "./motion/variants";
 import TiltCard from "./motion/TiltCard";
 import Badge from "./ui/Badge";
 import ConfidenceDial from "./ConfidenceDial";
@@ -23,6 +23,9 @@ const HIDDEN_META = new Set(["source", "image_url", "source_url"]);
 
 export default function ResultCard({ result, best, icon, searchId }: Props) {
   const [imageFailed, setImageFailed] = useState(false);
+  // The darkroom develop only starts once the poster has actually loaded, so the
+  // blur→sharp reveal never plays over an empty frame.
+  const [imageLoaded, setImageLoaded] = useState(false);
   const byAI = result.metadata?.source === "gpt-knowledge";
   // Show any real poster we have — including an OMDb one fetched for the AI hero.
   const showImage = result.image_url && !imageFailed;
@@ -52,20 +55,33 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
         <SaveButton itemId={result.item_id} />
       </div>
       {showImage ? (
-        <img
-          className={cn("rounded-[10px] border border-glass-line object-cover", posterSize)}
-          src={result.image_url!}
-          alt=""
-          loading="lazy"
-          onError={() => setImageFailed(true)}
-        />
+        // overflow-hidden keeps the heavy develop blur from bleeding past the corners.
+        <div className={cn("overflow-hidden rounded-[10px] border border-glass-line", posterSize)}>
+          <m.img
+            className="h-full w-full object-cover"
+            src={result.image_url!}
+            alt=""
+            loading="lazy"
+            variants={best ? photoDevelop : photoDevelopSoft}
+            initial="hidden"
+            animate={imageLoaded ? "show" : "hidden"}
+            onLoad={() => setImageLoaded(true)}
+            ref={(el: HTMLImageElement | null) => {
+              // Cached images can be complete before onLoad ever fires.
+              if (el?.complete) setImageLoaded(true);
+            }}
+            onError={() => setImageFailed(true)}
+          />
+        </div>
       ) : (
-        <PosterPlaceholder
-          posterSize={posterSize}
-          tone={byAI ? "amber" : "violet"}
-          icon={icon}
-          big={best}
-        />
+        <m.div variants={best ? apertureBloom : undefined}>
+          <PosterPlaceholder
+            posterSize={posterSize}
+            tone={byAI ? "amber" : "violet"}
+            icon={icon}
+            big={best}
+          />
+        </m.div>
       )}
 
       <div className="min-w-0">

@@ -65,11 +65,17 @@ class FakeCategory:
     key = "misc"
 
 
-def _identify_payload(title="Counting Stars", conf=0.82, conf_reason="Lyrics match exactly."):
+def _identify_payload(
+    title="Counting Stars",
+    conf=0.82,
+    conf_reason="Lyrics match exactly.",
+    description="",
+):
     return json.dumps(
         {
             "title": title,
             "detail": "OneRepublic, 2013",
+            "description": description,
             "reason": "Upbeat 2010s pop-rock song literally titled after counting stars.",
             "confidence": conf,
             "confidence_reason": conf_reason,
@@ -174,8 +180,9 @@ def test_greyzone_grounded_overridden_when_freeform_names_different_title():
     assert out[1].title == "Viva la Vida"
 
 
-def test_greyzone_grounded_kept_when_freeform_names_same_title():
-    # Grey zone, but the LLM confirms the same title — keep the grounded row (poster/src).
+def test_greyzone_grounded_promoted_when_freeform_names_same_title():
+    # Grey zone and the LLM confirms the same title — keep the grounded row
+    # (poster/src/rich description) but lift its confidence by the agreement.
     llm = FakeLLM(_identify_payload(title="Viva la Vida"))
     p = _pipeline(llm)
     grounded = _grounded(67.0)
@@ -183,7 +190,43 @@ def test_greyzone_grounded_kept_when_freeform_names_same_title():
         FakeDB(), FakeCategory(), "viva la vida", [grounded], max_results=5
     )
     assert llm.json_calls == 1  # LLM consulted...
-    assert out == [grounded]  # ...but grounded row preserved
+    assert out == [grounded]  # ...no gpt duplicate added
+    assert out[0].confidence == 82.0  # lifted to the (capped) free-form level
+    assert out[0].breakdown["ai_agreement"] == 15.0
+
+
+def test_weak_grounded_same_title_promoted_not_duplicated():
+    # Below the floor the AI names a title the catalog ALREADY has (even not first):
+    # promote that grounded row to the top instead of showing Titanic twice.
+    llm = FakeLLM(_identify_payload(title="Counting Stars"))
+    p = _pipeline(llm)
+    other = _grounded(58.9)  # "Viva la Vida"
+    match = ResultItem(item_id=9, title="Counting Stars", description="rich catalog text", confidence=52.0)
+    out = p._maybe_add_freeform(
+        FakeDB(), FakeCategory(), "count the stars", [other, match], max_results=5
+    )
+    assert len(out) == 2  # no third gpt row
+    assert out[0] is match  # grounded row promoted to Best Match
+    assert out[0].description == "rich catalog text"  # catalog detail preserved
+    assert out[0].confidence == 82.0
+    assert out[0].breakdown["ai_agreement"] == 30.0
+    assert out[0].confidence_note == "Lyrics match exactly."  # borrowed from the AI
+    assert out[1] is other
+
+
+def test_freeform_description_used_when_present():
+    llm = FakeLLM(_identify_payload(description="A 2013 anthem by OneRepublic about dreaming past money worries."))
+    p = _pipeline(llm)
+    out = p._maybe_add_freeform(FakeDB(), FakeCategory(), "count the stars", [], max_results=5)
+    assert out[0].description.startswith("A 2013 anthem")
+
+
+def test_freeform_description_language_slip_falls_back_to_detail():
+    # Non-ASCII description to an ASCII memory → scrubbed, terse detail shown instead.
+    llm = FakeLLM(_identify_payload(description="Uma música de 2013 sobre sonhos…"))
+    p = _pipeline(llm)
+    out = p._maybe_add_freeform(FakeDB(), FakeCategory(), "count the stars", [], max_results=5)
+    assert out[0].description == "OneRepublic, 2013"
 
 
 def test_confident_grounded_above_grey_margin_skips_llm():

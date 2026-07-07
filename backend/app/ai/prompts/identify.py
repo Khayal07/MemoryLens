@@ -13,19 +13,31 @@ is Actors, name the PERSON (e.g. "Carrie-Anne Moss"), not a film they appeared i
 If it is Songs, name the song, not the artist. If it is Books, name the book, not the \
 author. Put that name in `title`.
 
-Write `detail` and `reason` in the SAME language the user wrote the MEMORY in \
-(e.g. Azerbaijani memory → Azerbaijani wording). Keep the real `title` in its \
-original form.
+Write `detail`, `description`, `reason` and `confidence_reason` in the SAME language \
+the user wrote the MEMORY in (e.g. Azerbaijani memory → Azerbaijani wording). Keep \
+the real `title` in its original form.
+
+QUALITY RULES for `reason` and `confidence_reason`:
+- NEVER just restate the user's memory back at them.
+- Map each remembered fragment to the concrete fact in the {category} it corresponds \
+to (the actual scene, character, lyric, year, mechanic), naming specifics the user \
+did NOT mention.
+- Say what pins it down as exactly this one — and, if a similar {category} could be \
+confused with it, name that alternative and why it loses.
 
 Respond with ONLY a JSON object of this exact shape:
 {{
   "title": "<the real title, or empty string if unknown>",
   "detail": "<short factual tag: year / creator / artist / author>",
-  "reason": "<one sentence: why this matches the memory>",
+  "description": "<2-3 sentences describing the {category} itself, like a rich \
+catalog entry: what it is, what happens in it, who made it and when — NOT about \
+the user's memory>",
+  "reason": "<1-2 sentences following the QUALITY RULES: tie the remembered \
+fragments to the item's concrete facts and what uniquely pins it down>",
   "confidence": <number 0..1>,
-  "confidence_reason": "<one sentence, same language as the memory: why you are exactly \
-this confident — which remembered details pinned it down, and what (if anything) \
-remains uncertain>"
+  "confidence_reason": "<one sentence following the QUALITY RULES: which remembered \
+details pinned it down, what remains uncertain, and the closest alternative you \
+rejected, if any>"
 }}"""
 
 

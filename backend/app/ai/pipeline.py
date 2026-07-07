@@ -288,15 +288,33 @@ class SearchPipeline:
         item = self._identify_freeform(db, category, query)
         if item is None:
             return results
-        # Grey zone (floor ≤ top < floor+margin): a grounded match exists but is shaky.
-        # Only let the world-knowledge answer displace it when it names a *different*
-        # title — that's the signal the catalog pick was wrong (e.g. "We Will Rock You"
-        # grounded to "Don't Stop Believin'"). Same title → keep the grounded row so its
-        # real poster/source survive.
-        if top >= self.freeform_confidence_floor and results:
-            if _same_title(item.title, results[0].title):
-                return results
+        # If the AI names a title the catalog ALREADY retrieved, never show both — that
+        # reads as a duplicate. Promote the grounded row instead: it has the richer
+        # catalog description/poster, and the independent agreement lifts its
+        # confidence (surfaced as an `ai_agreement` ring in the breakdown).
+        for idx, grounded in enumerate(results):
+            if _same_title(item.title, grounded.title):
+                return self._promote_agreed(results, idx, item)[:max_results]
+        # Different title: the shaky catalog pick was likely wrong — the
+        # world-knowledge answer takes the top, weak matches kept as alternatives.
         return [item, *results][:max_results]
+
+    @staticmethod
+    def _promote_agreed(
+        results: list[ResultItem], idx: int, item: ResultItem
+    ) -> list[ResultItem]:
+        """The free-form answer confirmed a grounded row: move that row to the top,
+        lift its confidence to the (capped) free-form level, and borrow the AI's
+        explanations where the grounded row has none."""
+        agreed = results[idx]
+        lift = round(item.confidence - agreed.confidence, 1)
+        if lift > 0:
+            agreed.confidence = round(item.confidence, 1)
+            agreed.breakdown = {**(agreed.breakdown or {}), "ai_agreement": lift}
+        if not (agreed.reason and agreed.reason.strip()):
+            agreed.reason = item.reason
+        agreed.confidence_note = agreed.confidence_note or item.confidence_note
+        return [agreed, *(r for i, r in enumerate(results) if i != idx)]
 
     def _identify_freeform(self, db: Session, category, query: str) -> ResultItem | None:
         """Ungrounded identification: the LLM names the most likely real title. The
@@ -316,7 +334,11 @@ class SearchPipeline:
             return None
         # Ungrounded, so cap below certainty and flag the source for the UI.
         confidence = round(min(ident.confidence, 0.9) * 100, 1)
-        description = ident.detail or "Identified from world knowledge — not in the catalog."
+        # Prefer the rich catalog-style description so the hero card is at least as
+        # informative as a grounded one; a language slip falls back to the terse tag.
+        description = ident.description.strip()
+        if not description or _is_language_slip(description, query):
+            description = ident.detail or "Identified from world knowledge — not in the catalog."
         # The free-form hero has no catalog poster; give the prominent Best Match a real
         # image so it isn't a blank frame, from the right source per category. Best-effort.
         image_url = None

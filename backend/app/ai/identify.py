@@ -10,6 +10,9 @@ from pydantic import BaseModel, Field, ValidationError
 class Identification(BaseModel):
     title: str
     detail: str = ""
+    # A catalog-style 2–3 sentence description of the item itself, so the free-form
+    # hero card is as informative as a grounded one. Optional — older prompts omit it.
+    description: str = ""
     reason: str = ""
     confidence: float = Field(ge=0.0, le=1.0)
     # The model's own words on why it is exactly this confident (shown in the

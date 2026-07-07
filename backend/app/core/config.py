@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     # let the LLM name the real item from its own knowledge.
     freeform_enabled: bool = True
     freeform_confidence_floor: float = 65.0
+    # Grey zone above the floor: a grounded match here isn't strong, so we still ask the
+    # LLM for its world-knowledge answer and override the catalog pick only when it names
+    # a *different* title (the grounded match was likely wrong). Same title → keep the
+    # grounded row so its poster/source survive.
+    freeform_grey_margin: float = 8.0
 
     @property
     def cors_origin_list(self) -> list[str]:

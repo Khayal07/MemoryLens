@@ -73,6 +73,14 @@ def _slug(title: str) -> str:
     return s[:120] or "untitled"
 
 
+def _same_title(a: str, b: str) -> bool:
+    """Loose title equality for grey-zone freeform vs grounded comparison: slug-normalize
+    and treat one being contained in the other as a match (so "Hello" ≈ "Hello from the
+    Other Side", but "We Will Rock You" ≠ "Don't Stop Believin'")."""
+    sa, sb = _slug(a), _slug(b)
+    return sa == sb or sa in sb or sb in sa
+
+
 def _google_url(title: str, category: Category) -> str:
     """A best-effort 'View source' for an answer that isn't in the catalog: a Google
     search for the title within its category."""
@@ -91,6 +99,7 @@ class SearchPipeline:
         translate_enabled: bool = True,
         freeform_enabled: bool = True,
         freeform_confidence_floor: float = 65.0,
+        freeform_grey_margin: float = 8.0,
     ) -> None:
         self.retriever = retriever
         self.reranker = reranker
@@ -100,6 +109,7 @@ class SearchPipeline:
         self.translate_enabled = translate_enabled
         self.freeform_enabled = freeform_enabled
         self.freeform_confidence_floor = freeform_confidence_floor
+        self.freeform_grey_margin = freeform_grey_margin
 
     def run(
         self, db: Session, category_key: str, query: str, max_results: int = 5
@@ -197,11 +207,19 @@ class SearchPipeline:
         if not self.freeform_enabled:
             return results
         top = max((r.confidence for r in results), default=0.0)
-        if top >= self.freeform_confidence_floor:
-            return results
+        if top >= self.freeform_confidence_floor + self.freeform_grey_margin:
+            return results  # confident grounded match — trust the catalog, skip the LLM
         item = self._identify_freeform(db, category, query)
         if item is None:
             return results
+        # Grey zone (floor ≤ top < floor+margin): a grounded match exists but is shaky.
+        # Only let the world-knowledge answer displace it when it names a *different*
+        # title — that's the signal the catalog pick was wrong (e.g. "We Will Rock You"
+        # grounded to "Don't Stop Believin'"). Same title → keep the grounded row so its
+        # real poster/source survive.
+        if top >= self.freeform_confidence_floor and results:
+            if _same_title(item.title, results[0].title):
+                return results
         return [item, *results][:max_results]
 
     def _identify_freeform(self, db: Session, category, query: str) -> ResultItem | None:
@@ -374,4 +392,5 @@ def get_pipeline() -> SearchPipeline:
         translate_enabled=settings.translate_enabled,
         freeform_enabled=settings.freeform_enabled,
         freeform_confidence_floor=settings.freeform_confidence_floor,
+        freeform_grey_margin=settings.freeform_grey_margin,
     )

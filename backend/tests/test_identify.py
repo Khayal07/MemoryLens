@@ -132,6 +132,42 @@ def test_weak_grounded_result_triggers_freeform_as_primary():
     assert out[1].title == "Viva la Vida"  # weak catalog match kept as alternative
 
 
+def test_greyzone_grounded_overridden_when_freeform_names_different_title():
+    # 67 is above the 65 floor but inside the 8-pt grey margin. The catalog match is
+    # "Viva la Vida"; the LLM names "Counting Stars" — a different title, so the wrong
+    # grounded pick is displaced.
+    llm = FakeLLM(_identify_payload())
+    p = _pipeline(llm)
+    out = p._maybe_add_freeform(
+        FakeDB(), FakeCategory(), "count the stars", [_grounded(67.0)], max_results=5
+    )
+    assert llm.json_calls == 1
+    assert out[0].title == "Counting Stars"
+    assert out[1].title == "Viva la Vida"
+
+
+def test_greyzone_grounded_kept_when_freeform_names_same_title():
+    # Grey zone, but the LLM confirms the same title — keep the grounded row (poster/src).
+    llm = FakeLLM(_identify_payload(title="Viva la Vida"))
+    p = _pipeline(llm)
+    grounded = _grounded(67.0)
+    out = p._maybe_add_freeform(
+        FakeDB(), FakeCategory(), "viva la vida", [grounded], max_results=5
+    )
+    assert llm.json_calls == 1  # LLM consulted...
+    assert out == [grounded]  # ...but grounded row preserved
+
+
+def test_confident_grounded_above_grey_margin_skips_llm():
+    # 74 ≥ 65 + 8 → trust the catalog, never call the LLM.
+    llm = FakeLLM(_identify_payload())
+    p = _pipeline(llm)
+    results = [_grounded(74.0)]
+    out = p._maybe_add_freeform(FakeDB(), FakeCategory(), "count the stars", results, max_results=5)
+    assert out == results
+    assert llm.json_calls == 0
+
+
 def test_no_results_triggers_freeform():
     llm = FakeLLM(_identify_payload())
     p = _pipeline(llm)

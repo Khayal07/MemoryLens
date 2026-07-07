@@ -28,6 +28,7 @@ from app.core.config import get_settings
 from app.domain.categories import CATEGORY_KEYS
 from app.infra.models import Category, Item
 from app.infra.omdb import fetch_poster
+from app.infra.tmdb import fetch_person_image
 from app.schemas.search import MismatchSuggestion, ResultItem, SearchResponse
 
 log = structlog.get_logger()
@@ -42,6 +43,9 @@ _NON_ASCII = re.compile(r"[^\x00-\x7f]")
 _CYRILLIC = re.compile(r"[Ѐ-ӿ]")
 # Categories OMDb can poster (film/series) and the year pattern in a free-form detail.
 _OMDB_KIND = {"movies": "movie", "tv": "series"}
+# Person categories: a free-form answer here is someone's name, so its "poster" is a
+# TMDB profile photo (searched by name) rather than an OMDb film poster.
+_PERSON_KEYS = {"actors"}
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
 # Shown when the LLM picks a grounded match but returns no explanation for it.
 _FALLBACK_REASON = "A close match in the catalog for your memory."
@@ -243,12 +247,15 @@ class SearchPipeline:
         # Ungrounded, so cap below certainty and flag the source for the UI.
         confidence = round(min(ident.confidence, 0.9) * 100, 1)
         description = ident.detail or "Identified from world knowledge — not in the catalog."
-        # The free-form hero has no catalog poster; for films/series pull one from OMDb
-        # so the prominent Best Match isn't a blank frame. Best-effort.
+        # The free-form hero has no catalog poster; give the prominent Best Match a real
+        # image so it isn't a blank frame — an OMDb poster for films/series, a TMDB
+        # profile photo for people. Best-effort.
         image_url = None
         kind = _OMDB_KIND.get(category.key)
         if kind:
             image_url = fetch_poster(title, _year_from(ident.detail), kind)
+        elif category.key in _PERSON_KEYS:
+            image_url = fetch_person_image(title)
         reason = ident.reason or None
         if _is_language_slip(reason, query):
             reason = None

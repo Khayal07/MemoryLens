@@ -6,6 +6,7 @@ import MismatchBanner from "../components/MismatchBanner";
 import ResultCard from "../components/ResultCard";
 import SimilarItems from "../components/SimilarItems";
 import ShareButton from "../components/ShareButton";
+import VoiceInput from "../components/VoiceInput";
 import Button from "../components/ui/Button";
 import EmptyState from "../components/ui/EmptyState";
 import Eyebrow from "../components/ui/Eyebrow";
@@ -82,6 +83,7 @@ export default function Search() {
           aria-label="Describe what you remember"
           className="max-h-40 min-h-7 flex-1 resize-none bg-transparent px-3 py-3 text-[1.05rem] leading-[1.45] text-ink outline-none placeholder:text-faint"
         />
+        <VoiceInput value={query} onChange={setQuery} />
         <Button type="submit" disabled={mutation.isPending} className="self-stretch">
           {mutation.isPending ? "Focusing…" : "Recall"}
         </Button>

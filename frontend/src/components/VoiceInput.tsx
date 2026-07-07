@@ -25,6 +25,10 @@ function getRecognizer(): SRConstructor | null {
 }
 
 const BARS = 5;
+/** Auto-stop after this much silence — nobody wants a mic that never sleeps. */
+const SILENCE_MS = 5000;
+/** RMS level (0..1) above which we count the input as speech, not room noise. */
+const VOICE_LEVEL = 0.08;
 
 interface Props {
   value: string;
@@ -42,6 +46,8 @@ export default function VoiceInput({ value, onChange }: Props) {
 
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const baseRef = useRef("");
+  const lastVoiceRef = useRef(0);
+  const silenceTimerRef = useRef<number | null>(null);
   const audioRef = useRef<{ ctx: AudioContext; stream: MediaStream; raf: number } | null>(null);
   const barRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const onChangeRef = useRef(onChange);
@@ -54,6 +60,10 @@ export default function VoiceInput({ value, onChange }: Props) {
   function stop() {
     recRef.current?.stop();
     recRef.current = null;
+    if (silenceTimerRef.current !== null) {
+      window.clearInterval(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
     if (audioRef.current) {
       cancelAnimationFrame(audioRef.current.raf);
       audioRef.current.stream.getTracks().forEach((t) => t.stop());
@@ -77,6 +87,7 @@ export default function VoiceInput({ value, onChange }: Props) {
         let sum = 0;
         for (const v of data) sum += (v - 128) ** 2;
         const level = Math.min(1, Math.sqrt(sum / data.length) / 40);
+        if (level > VOICE_LEVEL) lastVoiceRef.current = Date.now();
         barRefs.current.forEach((bar, i) => {
           if (!bar) return;
           const jitter = 0.55 + 0.45 * Math.sin(Date.now() / 90 + i * 1.7);
@@ -99,6 +110,9 @@ export default function VoiceInput({ value, onChange }: Props) {
     rec.interimResults = true;
     baseRef.current = value.trim();
     rec.onresult = (e) => {
+      // Recognizer results also count as voice — covers the no-waveform (no mic
+      // permission for the analyser) case.
+      lastVoiceRef.current = Date.now();
       let heard = "";
       for (let i = 0; i < e.results.length; i++) heard += e.results[i][0].transcript;
       const base = baseRef.current;
@@ -119,6 +133,10 @@ export default function VoiceInput({ value, onChange }: Props) {
     recRef.current = rec;
     rec.start();
     setListening(true);
+    lastVoiceRef.current = Date.now();
+    silenceTimerRef.current = window.setInterval(() => {
+      if (Date.now() - lastVoiceRef.current > SILENCE_MS) stop();
+    }, 500);
     void startWaveform();
   }
 

@@ -21,6 +21,10 @@ class ResultItem(BaseModel):
     metadata: dict = Field(default_factory=dict)
     confidence: float = Field(ge=0.0, le=100.0)
     reason: str | None = None
+    # Per-signal contribution (percentage points) behind `confidence`: llm/rerank/
+    # retrieval for grounded rows, ai_knowledge for free-form, feedback when votes
+    # nudged it. None on legacy cached responses.
+    breakdown: dict[str, float] | None = None
 
 
 class MismatchSuggestion(BaseModel):

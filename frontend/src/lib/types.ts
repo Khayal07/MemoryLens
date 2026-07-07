@@ -13,6 +13,8 @@ export interface ResultItem {
   metadata: Record<string, unknown>;
   confidence: number;
   reason: string | null;
+  /** Per-signal contribution (pp) behind confidence; absent on legacy responses. */
+  breakdown?: Record<string, number> | null;
 }
 
 export interface MismatchSuggestion {

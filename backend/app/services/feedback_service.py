@@ -68,4 +68,7 @@ def apply_feedback(db: Session, response: SearchResponse) -> None:
         if net:
             delta = max(-_MAX_DELTA, min(_MAX_DELTA, net * _VOTE_WEIGHT))
             r.confidence = round(min(100.0, max(0.0, r.confidence + delta)), 1)
+            if r.breakdown is not None:
+                # Surface the nudge in the confidence breakdown the UI shows.
+                r.breakdown = {**r.breakdown, "feedback": round(delta, 1)}
     response.results.sort(key=lambda r: r.confidence, reverse=True)

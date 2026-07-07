@@ -1,10 +1,11 @@
-import { m } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { useState } from "react";
 import type { ResultItem } from "../lib/types";
 import { cn } from "../lib/cn";
 import { apertureBloom, developIn, photoDevelop, photoDevelopSoft } from "./motion/variants";
 import TiltCard from "./motion/TiltCard";
 import Badge from "./ui/Badge";
+import ConfidenceBreakdown from "./ConfidenceBreakdown";
 import ConfidenceDial from "./ConfidenceDial";
 import ConfidenceMeter from "./ConfidenceMeter";
 import SaveButton from "./SaveButton";
@@ -26,6 +27,8 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
   // The darkroom develop only starts once the poster has actually loaded, so the
   // blur→sharp reveal never plays over an empty frame.
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const breakdown = result.breakdown ?? null;
   const byAI = result.metadata?.source === "gpt-knowledge";
   // Show any real poster we have — including an OMDb one fetched for the AI hero.
   const showImage = result.image_url && !imageFailed;
@@ -92,7 +95,37 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
         )}
 
         {best ? (
-          <ConfidenceDial value={result.confidence} />
+          breakdown ? (
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowBreakdown((v) => !v)}
+                aria-expanded={showBreakdown}
+                aria-label="Why this confidence? Toggle the signal breakdown"
+                className="group rounded-full text-left outline-none focus-visible:ring-2 focus-visible:ring-violet/60"
+              >
+                <ConfidenceDial value={result.confidence} />
+                <span className="mt-1 block text-center text-[0.68rem] text-faint transition-colors group-hover:text-muted">
+                  why? {showBreakdown ? "▴" : "▾"}
+                </span>
+              </button>
+              <AnimatePresence>
+                {showBreakdown && (
+                  <m.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3, ease: [0.2, 0.7, 0.2, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <ConfidenceBreakdown breakdown={breakdown} />
+                  </m.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <ConfidenceDial value={result.confidence} />
+          )
         ) : (
           <div className={cn(!byAI && "pr-10")}>
             <ConfidenceMeter value={result.confidence} />

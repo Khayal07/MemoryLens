@@ -15,7 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai.cleaning import clean_query, validate_query
-from app.ai.confidence import compute_confidence
+from app.ai.confidence import compute_breakdown, compute_confidence
 from app.ai.identify import IdentifyParseError, parse_identification
 from app.ai.llm import LLMClient, LLMError
 from app.ai.prompts import hyde, identify, translate
@@ -305,6 +305,8 @@ class SearchPipeline:
             metadata=metadata,
             confidence=confidence,
             reason=reason,
+            # Ungrounded: the whole number rests on the model's world knowledge.
+            breakdown={"ai_knowledge": confidence},
         )
 
     @staticmethod
@@ -378,6 +380,9 @@ class SearchPipeline:
                             match.rating, cand.rerank_score, cand.retrieval_score, max_retrieval
                         ),
                         reason,
+                        compute_breakdown(
+                            match.rating, cand.rerank_score, cand.retrieval_score, max_retrieval
+                        ),
                     )
                 )
 
@@ -391,13 +396,21 @@ class SearchPipeline:
                             0.5, cand.rerank_score, cand.retrieval_score, max_retrieval
                         ),
                         None,
+                        compute_breakdown(
+                            0.5, cand.rerank_score, cand.retrieval_score, max_retrieval
+                        ),
                     )
                 )
 
         return results[:max_results], self._validate_mismatch(category_key, query, reasoning)
 
     @staticmethod
-    def _to_result(cand: Candidate, confidence: float, reason: str | None) -> ResultItem:
+    def _to_result(
+        cand: Candidate,
+        confidence: float,
+        reason: str | None,
+        breakdown: dict[str, float] | None = None,
+    ) -> ResultItem:
         return ResultItem(
             item_id=cand.item_id,
             title=cand.title,
@@ -407,6 +420,7 @@ class SearchPipeline:
             metadata=cand.metadata,
             confidence=confidence,
             reason=reason,
+            breakdown=breakdown,
         )
 
     @staticmethod

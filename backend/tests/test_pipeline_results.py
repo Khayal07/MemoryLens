@@ -40,6 +40,25 @@ def test_empty_reason_on_non_ascii_query_stays_blank():
     assert not results[0].reason  # blank, not an English template
 
 
+# --- confidence breakdown --------------------------------------------------
+
+
+def test_results_carry_breakdown():
+    p = _pipeline()
+    reasoning = LLMReasoning(matches=[LLMMatch(item_id=1, reason="He is Iron Man.", rating=0.9)])
+    results, _ = p._build_results("actors", "who plays iron man", [_cand()], reasoning, 5)
+    b = results[0].breakdown
+    assert b is not None and set(b) == {"llm", "rerank", "retrieval"}
+    assert sum(b.values()) == results[0].confidence
+
+
+def test_fallback_results_carry_breakdown():
+    # No LLM reasoning → rerank-order fallback still explains its number.
+    p = _pipeline()
+    results, _ = p._build_results("actors", "who plays iron man", [_cand()], None, 5)
+    assert results[0].breakdown is not None
+
+
 # --- _same_title (Fix 2) --------------------------------------------------
 
 

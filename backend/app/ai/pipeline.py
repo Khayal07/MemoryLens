@@ -290,6 +290,9 @@ class SearchPipeline:
         reason = ident.reason or None
         if _is_language_slip(reason, query):
             reason = None
+        confidence_note = ident.confidence_reason.strip() or None
+        if _is_language_slip(confidence_note, query):
+            confidence_note = None  # breakdown panel falls back to its static text
 
         metadata = {"source": "gpt-knowledge", "detail": ident.detail}
         source_url = _google_url(title, category)
@@ -307,6 +310,7 @@ class SearchPipeline:
             reason=reason,
             # Ungrounded: the whole number rests on the model's world knowledge.
             breakdown={"ai_knowledge": confidence},
+            confidence_note=confidence_note,
         )
 
     @staticmethod

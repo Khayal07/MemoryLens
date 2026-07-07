@@ -25,6 +25,8 @@ class ResultItem(BaseModel):
     # retrieval for grounded rows, ai_knowledge for free-form, feedback when votes
     # nudged it. None on legacy cached responses.
     breakdown: dict[str, float] | None = None
+    # Free-form only: the model's own sentence on why it is this confident.
+    confidence_note: str | None = None
 
 
 class MismatchSuggestion(BaseModel):

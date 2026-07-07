@@ -118,7 +118,7 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
                     transition={{ duration: 0.3, ease: [0.2, 0.7, 0.2, 1] }}
                     className="overflow-hidden"
                   >
-                    <ConfidenceBreakdown breakdown={breakdown} />
+                    <ConfidenceBreakdown breakdown={breakdown} note={result.confidence_note} />
                   </m.div>
                 )}
               </AnimatePresence>

@@ -32,15 +32,24 @@ const NEGATIVE_COLOR = "#e07c7c";
 
 interface Props {
   breakdown: Record<string, number>;
+  /** The AI's own sentence on why it is this confident — replaces the static
+   *  ai_knowledge explanation when present. */
+  note?: string | null;
 }
 
 /** WHY the confidence is what it is: one concentric ring per signal, drawn to its
  *  contribution (percentage points of the final number), each explained in plain
  *  words. Expanded from the hero's ConfidenceDial. */
-export default function ConfidenceBreakdown({ breakdown }: Props) {
+export default function ConfidenceBreakdown({ breakdown, note }: Props) {
   const entries = Object.keys(SIGNALS)
     .filter((k) => breakdown[k] !== undefined)
-    .map((k) => ({ key: k, value: breakdown[k], ...SIGNALS[k] }));
+    .map((k) => ({
+      key: k,
+      value: breakdown[k],
+      ...SIGNALS[k],
+      // The AI's own explanation beats the canned one when it gave us one.
+      desc: k === "ai_knowledge" && note ? note : SIGNALS[k].desc,
+    }));
   if (entries.length === 0) return null;
 
   const total = Math.round(entries.reduce((s, e) => s + e.value, 0));

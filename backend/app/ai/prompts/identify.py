@@ -22,7 +22,10 @@ Respond with ONLY a JSON object of this exact shape:
   "title": "<the real title, or empty string if unknown>",
   "detail": "<short factual tag: year / creator / artist / author>",
   "reason": "<one sentence: why this matches the memory>",
-  "confidence": <number 0..1>
+  "confidence": <number 0..1>,
+  "confidence_reason": "<one sentence, same language as the memory: why you are exactly \
+this confident — which remembered details pinned it down, and what (if anything) \
+remains uncertain>"
 }}"""
 
 

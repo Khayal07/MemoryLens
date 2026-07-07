@@ -12,6 +12,9 @@ class Identification(BaseModel):
     detail: str = ""
     reason: str = ""
     confidence: float = Field(ge=0.0, le=1.0)
+    # The model's own words on why it is exactly this confident (shown in the
+    # confidence-breakdown panel). Optional — older prompts/models may omit it.
+    confidence_reason: str = ""
 
 
 class IdentifyParseError(ValueError):

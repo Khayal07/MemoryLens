@@ -15,6 +15,8 @@ export interface ResultItem {
   reason: string | null;
   /** Per-signal contribution (pp) behind confidence; absent on legacy responses. */
   breakdown?: Record<string, number> | null;
+  /** Free-form only: the model's own sentence on why it is this confident. */
+  confidence_note?: string | null;
 }
 
 export interface MismatchSuggestion {

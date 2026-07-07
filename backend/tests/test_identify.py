@@ -65,13 +65,14 @@ class FakeCategory:
     key = "misc"
 
 
-def _identify_payload(title="Counting Stars", conf=0.82):
+def _identify_payload(title="Counting Stars", conf=0.82, conf_reason="Lyrics match exactly."):
     return json.dumps(
         {
             "title": title,
             "detail": "OneRepublic, 2013",
             "reason": "Upbeat 2010s pop-rock song literally titled after counting stars.",
             "confidence": conf,
+            "confidence_reason": conf_reason,
         }
     )
 
@@ -97,6 +98,31 @@ def test_parse_identification_valid():
     ident = parse_identification(_identify_payload())
     assert ident.title == "Counting Stars"
     assert ident.confidence == pytest.approx(0.82)
+
+
+def test_parse_identification_confidence_reason():
+    ident = parse_identification(_identify_payload(conf_reason="Title is literal."))
+    assert ident.confidence_reason == "Title is literal."
+    # And the field is optional for older/other payload shapes.
+    legacy = json.dumps({"title": "X", "confidence": 0.5})
+    assert parse_identification(legacy).confidence_reason == ""
+
+
+def test_freeform_result_carries_confidence_note():
+    p = _pipeline(FakeLLM(_identify_payload()))
+    out = p._maybe_add_freeform(
+        FakeDB(), FakeCategory(), "count the stars", [_grounded(58.9)], max_results=5
+    )
+    assert out[0].confidence_note == "Lyrics match exactly."
+
+
+def test_confidence_note_language_slip_scrubbed():
+    # Portuguese-style non-ASCII note to an ASCII memory → scrubbed to None.
+    p = _pipeline(FakeLLM(_identify_payload(conf_reason="é uma correspondência exata")))
+    out = p._maybe_add_freeform(
+        FakeDB(), FakeCategory(), "count the stars", [_grounded(58.9)], max_results=5
+    )
+    assert out[0].confidence_note is None
 
 
 def test_parse_identification_code_fenced():

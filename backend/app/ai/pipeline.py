@@ -27,6 +27,7 @@ from app.ai.types import Candidate
 from app.core.config import get_settings
 from app.domain.categories import CATEGORY_KEYS
 from app.infra.models import Category, Item
+from app.infra.itunes import fetch_song_cover
 from app.infra.omdb import fetch_poster
 from app.infra.tmdb import fetch_person_image
 from app.schemas.search import MismatchSuggestion, ResultItem, SearchResponse
@@ -46,6 +47,8 @@ _OMDB_KIND = {"movies": "movie", "tv": "series"}
 # Person categories: a free-form answer here is someone's name, so its "poster" is a
 # TMDB profile photo (searched by name) rather than an OMDb film poster.
 _PERSON_KEYS = {"actors"}
+# Music categories: a free-form answer's "poster" is iTunes album cover art.
+_SONG_KEYS = {"songs"}
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
 # Shown when the LLM picks a grounded match but returns no explanation for it.
 _FALLBACK_REASON = "A close match in the catalog for your memory."
@@ -70,6 +73,16 @@ def _year_from(detail: str | None) -> str | None:
     """Pull the first 4-digit year out of a free-form detail like "1957 / Lumet"."""
     match = _YEAR_RE.search(detail or "")
     return match.group(0) if match else None
+
+
+def _artist_from(detail: str | None) -> str | None:
+    """Pull the artist out of a free-form song detail like "OneRepublic, 2013" — the
+    first comma-segment that isn't just a year, used to sharpen the cover-art search."""
+    for part in (detail or "").split(","):
+        p = part.strip()
+        if p and not _YEAR_RE.fullmatch(p):
+            return p
+    return None
 
 
 def _slug(title: str) -> str:
@@ -249,13 +262,15 @@ class SearchPipeline:
         description = ident.detail or "Identified from world knowledge — not in the catalog."
         # The free-form hero has no catalog poster; give the prominent Best Match a real
         # image so it isn't a blank frame — an OMDb poster for films/series, a TMDB
-        # profile photo for people. Best-effort.
+        # profile photo for people, iTunes album art for songs. Best-effort.
         image_url = None
         kind = _OMDB_KIND.get(category.key)
         if kind:
             image_url = fetch_poster(title, _year_from(ident.detail), kind)
         elif category.key in _PERSON_KEYS:
             image_url = fetch_person_image(title)
+        elif category.key in _SONG_KEYS:
+            image_url = fetch_song_cover(title, _artist_from(ident.detail))
         reason = ident.reason or None
         if _is_language_slip(reason, query):
             reason = None

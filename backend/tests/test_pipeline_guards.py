@@ -1,4 +1,14 @@
-from app.ai.pipeline import _is_language_slip, _slug
+from app.ai.pipeline import _artist_from, _is_language_slip, _slug
+
+
+def test_artist_from_picks_name_over_year():
+    assert _artist_from("OneRepublic, 2013") == "OneRepublic"
+    assert _artist_from("2013, OneRepublic") == "OneRepublic"
+
+
+def test_artist_from_none_when_empty_or_only_year():
+    assert _artist_from(None) is None
+    assert _artist_from("2013") is None
 
 
 def test_cyrillic_reply_to_latin_query_is_slip():

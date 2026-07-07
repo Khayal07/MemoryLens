@@ -51,6 +51,47 @@ export default function Constellation() {
   const [hovered, setHovered] = useState<SimNode | null>(null);
   const simRef = useRef<ReturnType<typeof forceSimulation<SimNode>> | null>(null);
 
+  // Pan/zoom is just the SVG viewBox — nothing else has to know about it.
+  const [view, setView] = useState({ x: 0, y: 0, w: W, h: H });
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const dragRef = useRef<{ px: number; py: number } | null>(null);
+  // Distance dragged since pointerdown — suppresses the click-through on release.
+  const movedRef = useRef(0);
+
+  const MIN_W = W / 5; // 5× max zoom-in
+  const MAX_W = W * 2.5; // 2.5× max zoom-out
+
+  function zoomBy(factor: number, cx?: number, cy?: number) {
+    setView((v) => {
+      const w = Math.min(MAX_W, Math.max(MIN_W, v.w * factor));
+      const h = w * (H / W);
+      const fx = cx ?? v.x + v.w / 2;
+      const fy = cy ?? v.y + v.h / 2;
+      // Keep the focus point stationary while the box scales around it.
+      const kx = (fx - v.x) / v.w;
+      const ky = (fy - v.y) / v.h;
+      return { x: fx - kx * w, y: fy - ky * h, w, h };
+    });
+  }
+
+  // Wheel zoom needs a native non-passive listener to preventDefault page scroll.
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const v = viewRef.current;
+      const cx = v.x + ((e.clientX - rect.left) / rect.width) * v.w;
+      const cy = v.y + ((e.clientY - rect.top) / rect.height) * v.h;
+      zoomBy(e.deltaY > 0 ? 1.15 : 1 / 1.15, cx, cy);
+    };
+    svg.addEventListener("wheel", onWheel, { passive: false });
+    return () => svg.removeEventListener("wheel", onWheel);
+  }, [nodes.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!data || data.nodes.length === 0) return;
     const simNodes: SimNode[] = data.nodes.map((n, i) => ({
@@ -128,8 +169,31 @@ export default function Constellation() {
 
       {nodes.length > 0 && (
         <div className="glass relative overflow-hidden rounded-lens">
-          <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img"
-            aria-label="Star map of your found items">
+          <svg
+            ref={svgRef}
+            viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
+            className={`block h-auto w-full touch-none ${dragRef.current ? "cursor-grabbing" : "cursor-grab"}`}
+            role="img"
+            aria-label="Star map of your found items"
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              dragRef.current = { px: e.clientX, py: e.clientY };
+              movedRef.current = 0;
+            }}
+            onPointerMove={(e) => {
+              const d = dragRef.current;
+              if (!d) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const dx = ((e.clientX - d.px) / rect.width) * view.w;
+              const dy = ((e.clientY - d.py) / rect.height) * view.h;
+              movedRef.current += Math.abs(e.clientX - d.px) + Math.abs(e.clientY - d.py);
+              d.px = e.clientX;
+              d.py = e.clientY;
+              setView((v) => ({ ...v, x: v.x - dx, y: v.y - dy }));
+            }}
+            onPointerUp={() => (dragRef.current = null)}
+            onPointerLeave={() => (dragRef.current = null)}
+          >
             {links.map((l, i) => {
               const s = l.source as SimNode;
               const t = l.target as SimNode;
@@ -153,7 +217,11 @@ export default function Constellation() {
                 className="cursor-pointer"
                 onMouseEnter={() => setHovered(n)}
                 onMouseLeave={() => setHovered((h) => (h?.data.id === n.data.id ? null : h))}
-                onClick={() => n.data.source_url && window.open(n.data.source_url, "_blank")}
+                onClick={() => {
+                  // A drag that ended on a node is not a click.
+                  if (movedRef.current > 6) return;
+                  if (n.data.source_url) window.open(n.data.source_url, "_blank");
+                }}
               >
                 <circle
                   r={radius(n) * 2.4}
@@ -174,8 +242,8 @@ export default function Constellation() {
             <div
               className="glass-strong pointer-events-none absolute z-10 flex w-[220px] items-center gap-3 rounded-xl p-3"
               style={{
-                left: `min(max(${((hovered.x ?? 0) / W) * 100}%, 2%), 72%)`,
-                top: `min(max(${((hovered.y ?? 0) / H) * 100 + 4}%, 2%), 78%)`,
+                left: `min(max(${(((hovered.x ?? 0) - view.x) / view.w) * 100}%, 2%), 72%)`,
+                top: `min(max(${(((hovered.y ?? 0) - view.y) / view.h) * 100 + 4}%, 2%), 78%)`,
               }}
             >
               {hovered.data.image_url ? (
@@ -195,6 +263,26 @@ export default function Constellation() {
               </div>
             </div>
           )}
+
+          <div className="absolute right-3 top-3 flex flex-col gap-1.5">
+            {[
+              { label: "Zoom in", glyph: "＋", action: () => zoomBy(1 / 1.3) },
+              { label: "Zoom out", glyph: "−", action: () => zoomBy(1.3) },
+              { label: "Reset view", glyph: "⌂", action: () => setView({ x: 0, y: 0, w: W, h: H }) },
+            ].map((b) => (
+              <button
+                key={b.label}
+                type="button"
+                onClick={b.action}
+                aria-label={b.label}
+                title={b.label}
+                className="glass flex h-9 w-9 items-center justify-center rounded-[10px] text-[1rem]
+                  text-muted transition-colors hover:border-violet/50 hover:text-ink"
+              >
+                {b.glyph}
+              </button>
+            ))}
+          </div>
 
           <div className="pointer-events-none absolute bottom-3 left-4 flex flex-wrap gap-3">
             {legend.map((cat) => (

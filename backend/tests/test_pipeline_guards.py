@@ -1,28 +1,38 @@
-from app.ai.pipeline import _is_foreign_script, _slug
+from app.ai.pipeline import _is_language_slip, _slug
 
 
-def test_cyrillic_reply_to_latin_query_is_foreign():
+def test_cyrillic_reply_to_latin_query_is_slip():
     # nano slipped into Russian on an English memory — scrub it.
-    assert _is_foreign_script("Вы упомянули фильм о хакере", "a film about a hacker")
+    assert _is_language_slip("Вы упомянули фильм о хакере", "a film about a hacker")
 
 
-def test_cyrillic_reply_to_azerbaijani_query_is_foreign():
+def test_cyrillic_reply_to_azerbaijani_query_is_slip():
     # Azerbaijani is Latin script, so a Cyrillic reply is still a slip.
-    assert _is_foreign_script("Это фильм", "hakker haqqında film")
+    assert _is_language_slip("Это фильм", "hakker haqqında film")
 
 
 def test_cyrillic_reply_to_cyrillic_query_is_allowed():
     # A genuine Russian memory should keep its Russian answer.
-    assert not _is_foreign_script("Это фильм о хакере", "фильм о хакере")
+    assert not _is_language_slip("Это фильм о хакере", "фильм о хакере")
 
 
-def test_latin_reply_is_never_foreign():
-    assert not _is_foreign_script("A film about a hacker", "a film about a hacker")
+def test_portuguese_reply_to_english_query_is_slip():
+    # nano slipped into Portuguese on a plain-English memory — scrub it.
+    assert _is_language_slip("Breaking Bad é uma série sobre um professor", "a chemistry teacher")
 
 
-def test_empty_text_is_never_foreign():
-    assert not _is_foreign_script("", "фильм")
-    assert not _is_foreign_script(None, "фильм")
+def test_in_language_reply_to_azerbaijani_query_is_allowed():
+    # An Azerbaijani (non-ASCII) memory keeps its Azerbaijani, accented answer.
+    assert not _is_language_slip("Bu, kimyagər haqqında serialdır", "kimyaçı müəllim")
+
+
+def test_latin_reply_is_never_slip():
+    assert not _is_language_slip("A film about a hacker", "a film about a hacker")
+
+
+def test_empty_text_is_never_slip():
+    assert not _is_language_slip("", "фильм")
+    assert not _is_language_slip(None, "фильм")
 
 
 def test_slug_basic():

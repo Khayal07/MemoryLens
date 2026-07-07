@@ -45,9 +45,19 @@ _OMDB_KIND = {"movies": "movie", "tv": "series"}
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
 
 
-def _is_foreign_script(text: str | None, query: str) -> bool:
-    """True when LLM text is Cyrillic but the memory wasn't — a nano language slip."""
-    return bool(text) and bool(_CYRILLIC.search(text)) and not _CYRILLIC.search(query)
+def _is_language_slip(text: str | None, query: str) -> bool:
+    """True when an LLM reply drifted to a different language than the memory — a nano
+    slip we scrub so the UI never shows a foreign explanation. Two cases:
+    - Cyrillic reply to a non-Cyrillic memory (a genuine Russian query keeps Russian).
+    - Non-ASCII reply (e.g. Portuguese "é uma série") to a plain-English (ASCII) memory;
+      an in-language answer to a non-ASCII memory (Azerbaijani, etc.) is left untouched."""
+    if not text:
+        return False
+    if _CYRILLIC.search(text) and not _CYRILLIC.search(query):
+        return True
+    if query.isascii() and not text.isascii():
+        return True
+    return False
 
 
 def _year_from(detail: str | None) -> str | None:
@@ -220,7 +230,7 @@ class SearchPipeline:
         if kind:
             image_url = fetch_poster(title, _year_from(ident.detail), kind)
         reason = ident.reason or None
-        if _is_foreign_script(reason, query):
+        if _is_language_slip(reason, query):
             reason = None
 
         metadata = {"source": "gpt-knowledge", "detail": ident.detail}
@@ -297,7 +307,7 @@ class SearchPipeline:
                 cand = by_id.get(match.item_id)
                 if cand is None:
                     continue  # ignore any id the model invented
-                reason = None if _is_foreign_script(match.reason, query) else match.reason
+                reason = None if _is_language_slip(match.reason, query) else match.reason
                 results.append(
                     self._to_result(
                         cand,
@@ -346,7 +356,7 @@ class SearchPipeline:
         if suspected not in CATEGORY_KEYS or suspected == category_key:
             return None
         message = reasoning.category_mismatch.message
-        if _is_foreign_script(message, query):
+        if _is_language_slip(message, query):
             message = ""  # frontend banner falls back to a neutral template
         return MismatchSuggestion(suspected_category=suspected, message=message)
 

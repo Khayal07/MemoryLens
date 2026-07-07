@@ -18,7 +18,8 @@ Your job:
 1. Choose the candidates whose details best fit the memory. Only choose from the \
 given candidates. Never invent an item_id that is not in the list.
 2. For each chosen candidate give a short `reason` (one or two sentences) that ties \
-specific clues in the memory to that candidate.
+specific clues in the memory to that candidate. Every `reason` must be a non-empty \
+sentence — never return an empty string, even for an obvious match.
 3. Give each chosen candidate a `rating` from 0 to 1 for how confident the match is.
 4. Order matches best-first. Return an empty list if nothing fits.
 5. If the memory clearly describes a DIFFERENT category than the one selected, set \

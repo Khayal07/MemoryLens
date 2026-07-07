@@ -43,6 +43,8 @@ _CYRILLIC = re.compile(r"[Ѐ-ӿ]")
 # Categories OMDb can poster (film/series) and the year pattern in a free-form detail.
 _OMDB_KIND = {"movies": "movie", "tv": "series"}
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
+# Shown when the LLM picks a grounded match but returns no explanation for it.
+_FALLBACK_REASON = "A close match in the catalog for your memory."
 
 
 def _is_language_slip(text: str | None, query: str) -> bool:
@@ -326,6 +328,11 @@ class SearchPipeline:
                 if cand is None:
                     continue  # ignore any id the model invented
                 reason = None if _is_language_slip(match.reason, query) else match.reason
+                if not (reason and reason.strip()) and query.isascii():
+                    # nano sometimes omits the reason for an obvious match (e.g. an
+                    # actor). Show a neutral English line rather than a blank one; a
+                    # non-ASCII (in-language) memory is left as-is to avoid a language mix.
+                    reason = _FALLBACK_REASON
                 results.append(
                     self._to_result(
                         cand,

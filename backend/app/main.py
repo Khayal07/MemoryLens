@@ -14,24 +14,29 @@ from app.api.v1.search import router as search_router
 from app.core.config import get_settings
 from app.core.errors import AppError, app_error_handler
 from app.core.logging import configure_logging
-from app.core.middleware import RequestContextMiddleware
+from app.core.middleware import RequestContextMiddleware, SecurityHeadersMiddleware
 
 settings = get_settings()
 configure_logging()
 
+# Hide the interactive schema/docs in production (they enumerate every endpoint).
 app = FastAPI(
     title="MemoryLens API",
     version="0.1.0",
     description="Find things you partially remember.",
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
 )
 
 app.add_middleware(RequestContextMiddleware)
+app.add_middleware(SecurityHeadersMiddleware, production=settings.is_production)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Metrics-Token"],
 )
 
 app.add_exception_handler(AppError, app_error_handler)

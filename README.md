@@ -155,6 +155,48 @@ Full run details and per-category breakdowns: [backend/eval/RESULTS.md](backend/
 
 ---
 
+## Deploying to production
+
+`docker-compose.yml` is the **development** stack (Vite dev server, `--reload`,
+Postgres/Redis published to the host). For a public deployment use
+`docker-compose.prod.yml`, which serves a built static frontend via nginx, runs the
+API without reload, and keeps the database and cache on the internal network only.
+
+1. **Create `.env.prod`** from `.env.example` and set **strong** secrets:
+   ```bash
+   JWT_SECRET=$(openssl rand -hex 32)      # required — the API won't start otherwise
+   POSTGRES_USER=memorylens_prod
+   POSTGRES_PASSWORD=$(openssl rand -base64 32)
+   REDIS_PASSWORD=$(openssl rand -base64 32)
+   REDIS_URL=redis://:<that-redis-password>@redis:6379/0
+   METRICS_TOKEN=$(openssl rand -hex 16)   # required to scrape /metrics in prod
+   ENV=production
+   CORS_ORIGINS=https://your-domain
+   ```
+   Also set the real `OPENAI_API_KEY` and ingestion keys. **Rotate any key that has
+   ever sat in a shared `.env`.**
+
+2. **Launch:**
+   ```bash
+   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+   ```
+
+3. **Front it with TLS.** Put nginx/Caddy/Traefik in front of the `frontend` service
+   (port 8080) to terminate HTTPS; the app emits HSTS when `ENV=production`. The
+   proxy must set `X-Forwarded-For` to the real client IP — the per-user/per-IP rate
+   limiter reads it (the bundled nginx already does this).
+
+**What `ENV=production` changes:** requires a real `JWT_SECRET` (fail-fast on
+startup), hides `/docs` `/redoc` `/openapi.json`, gates `/metrics` behind
+`X-Metrics-Token`, and emits HSTS.
+
+**Cost / abuse controls:** search requires login and is capped per user by
+`SEARCH_RATE_PER_MIN` (burst) and `SEARCH_DAILY_QUOTA` (hard daily ceiling), so one
+account can't drain the LLM budget. Security headers (`X-Content-Type-Options`,
+`X-Frame-Options`, CSP, `Referrer-Policy`) are set on every response.
+
+---
+
 ## Status
 
 ✅ Backend (grounded RAG pipeline, hybrid retrieval, auth, history), frontend SPA

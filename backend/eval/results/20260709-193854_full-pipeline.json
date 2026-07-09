@@ -1,0 +1,588 @@
+{
+  "label": "full-pipeline",
+  "timestamp": "2026-07-09T19:38:54+00:00",
+  "config": {
+    "mode": "full-pipeline",
+    "leg": "hybrid",
+    "rerank": true,
+    "hyde": false,
+    "k": 5,
+    "cases": 48
+  },
+  "metrics": {
+    "recall@1": 0.917,
+    "recall@3": 0.958,
+    "recall@5": 0.958,
+    "mrr": 0.938
+  },
+  "by_category": {
+    "actors": {
+      "recall@1": 0.875,
+      "recall@5": 0.875,
+      "mrr": 0.875,
+      "n": 8
+    },
+    "books": {
+      "recall@1": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "n": 8
+    },
+    "games": {
+      "recall@1": 0.75,
+      "recall@5": 0.875,
+      "mrr": 0.812,
+      "n": 8
+    },
+    "movies": {
+      "recall@1": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "n": 8
+    },
+    "songs": {
+      "recall@1": 0.875,
+      "recall@5": 1.0,
+      "mrr": 0.938,
+      "n": 8
+    },
+    "tv": {
+      "recall@1": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "n": 8
+    }
+  },
+  "by_difficulty": {
+    "easy": {
+      "recall@1": 1.0,
+      "recall@5": 1.0,
+      "mrr": 1.0,
+      "n": 13
+    },
+    "hard": {
+      "recall@1": 0.824,
+      "recall@5": 0.941,
+      "mrr": 0.882,
+      "n": 17
+    },
+    "medium": {
+      "recall@1": 0.944,
+      "recall@5": 0.944,
+      "mrr": 0.944,
+      "n": 18
+    }
+  },
+  "seconds": 336.9,
+  "cases": [
+    {
+      "id": "mov-01",
+      "category": "movies",
+      "difficulty": "easy",
+      "expected": "12 Angry Men",
+      "rank": 1,
+      "top": [
+        "12 Angry Men"
+      ]
+    },
+    {
+      "id": "mov-02",
+      "category": "movies",
+      "difficulty": "easy",
+      "expected": "Titanic",
+      "rank": 1,
+      "top": [
+        "Titanic"
+      ]
+    },
+    {
+      "id": "mov-03",
+      "category": "movies",
+      "difficulty": "medium",
+      "expected": "The Matrix",
+      "rank": 1,
+      "top": [
+        "The Matrix",
+        "Inception"
+      ]
+    },
+    {
+      "id": "mov-04",
+      "category": "movies",
+      "difficulty": "medium",
+      "expected": "Inception",
+      "rank": 1,
+      "top": [
+        "Inception"
+      ]
+    },
+    {
+      "id": "mov-05",
+      "category": "movies",
+      "difficulty": "medium",
+      "expected": "The Truman Show",
+      "rank": 1,
+      "top": [
+        "The Truman Show"
+      ]
+    },
+    {
+      "id": "mov-06",
+      "category": "movies",
+      "difficulty": "hard",
+      "expected": "Forrest Gump",
+      "rank": 1,
+      "top": [
+        "Forrest Gump"
+      ]
+    },
+    {
+      "id": "mov-07",
+      "category": "movies",
+      "difficulty": "hard",
+      "expected": "The Shawshank Redemption",
+      "rank": 1,
+      "top": [
+        "The Shawshank Redemption"
+      ]
+    },
+    {
+      "id": "mov-08",
+      "category": "movies",
+      "difficulty": "hard",
+      "expected": "Interstellar",
+      "rank": 1,
+      "top": [
+        "Interstellar",
+        "Deool Band 2"
+      ]
+    },
+    {
+      "id": "tv-01",
+      "category": "tv",
+      "difficulty": "easy",
+      "expected": "Breaking Bad",
+      "rank": 1,
+      "top": [
+        "Breaking Bad"
+      ]
+    },
+    {
+      "id": "tv-02",
+      "category": "tv",
+      "difficulty": "easy",
+      "expected": "Friends",
+      "rank": 1,
+      "top": [
+        "Friends"
+      ]
+    },
+    {
+      "id": "tv-03",
+      "category": "tv",
+      "difficulty": "easy",
+      "expected": "Stranger Things",
+      "rank": 1,
+      "top": [
+        "Stranger Things"
+      ]
+    },
+    {
+      "id": "tv-04",
+      "category": "tv",
+      "difficulty": "medium",
+      "expected": "Squid Game",
+      "rank": 1,
+      "top": [
+        "Squid Game"
+      ]
+    },
+    {
+      "id": "tv-05",
+      "category": "tv",
+      "difficulty": "medium",
+      "expected": "Game of Thrones",
+      "rank": 1,
+      "top": [
+        "Game of Thrones",
+        "House of the Dragon"
+      ]
+    },
+    {
+      "id": "tv-06",
+      "category": "tv",
+      "difficulty": "medium",
+      "expected": "The Office",
+      "rank": 1,
+      "top": [
+        "The Office"
+      ]
+    },
+    {
+      "id": "tv-07",
+      "category": "tv",
+      "difficulty": "hard",
+      "expected": "Dark",
+      "rank": 1,
+      "top": [
+        "Dark",
+        "Stranger Things"
+      ]
+    },
+    {
+      "id": "tv-08",
+      "category": "tv",
+      "difficulty": "hard",
+      "expected": "Money Heist",
+      "rank": 1,
+      "top": [
+        "Money Heist"
+      ]
+    },
+    {
+      "id": "son-01",
+      "category": "songs",
+      "difficulty": "easy",
+      "expected": "Bohemian Rhapsody",
+      "rank": 1,
+      "top": [
+        "Bohemian Rhapsody"
+      ]
+    },
+    {
+      "id": "son-02",
+      "category": "songs",
+      "difficulty": "easy",
+      "expected": "Dancing Queen",
+      "rank": 1,
+      "top": [
+        "Dancing Queen"
+      ]
+    },
+    {
+      "id": "son-03",
+      "category": "songs",
+      "difficulty": "medium",
+      "expected": "Creep",
+      "rank": 1,
+      "top": [
+        "Creep"
+      ]
+    },
+    {
+      "id": "son-04",
+      "category": "songs",
+      "difficulty": "medium",
+      "expected": "My Heart Will Go On",
+      "rank": 1,
+      "top": [
+        "My Heart Will Go On"
+      ]
+    },
+    {
+      "id": "son-05",
+      "category": "songs",
+      "difficulty": "medium",
+      "expected": "Don't Stop Believin'",
+      "rank": 1,
+      "top": [
+        "Don't Stop Believin'"
+      ]
+    },
+    {
+      "id": "son-06",
+      "category": "songs",
+      "difficulty": "hard",
+      "expected": "Every Breath You Take",
+      "rank": 1,
+      "top": [
+        "Every Breath You Take"
+      ]
+    },
+    {
+      "id": "son-07",
+      "category": "songs",
+      "difficulty": "hard",
+      "expected": "Stairway to Heaven",
+      "rank": 2,
+      "top": [
+        "Bohemian Rhapsody",
+        "Stairway to Heaven",
+        "Purple Rain"
+      ]
+    },
+    {
+      "id": "son-08",
+      "category": "songs",
+      "difficulty": "hard",
+      "expected": "Zombie",
+      "rank": 1,
+      "top": [
+        "Zombie"
+      ]
+    },
+    {
+      "id": "boo-01",
+      "category": "books",
+      "difficulty": "easy",
+      "expected": "Harry Potter and the Philosopher's Stone",
+      "rank": 1,
+      "top": [
+        "Harry Potter and the Philosopher's Stone",
+        "Harry Potter and the Half-Blood Prince",
+        "The School for Good and Evil"
+      ]
+    },
+    {
+      "id": "boo-02",
+      "category": "books",
+      "difficulty": "easy",
+      "expected": "Animal Farm",
+      "rank": 1,
+      "top": [
+        "Animal Farm"
+      ]
+    },
+    {
+      "id": "boo-03",
+      "category": "books",
+      "difficulty": "medium",
+      "expected": "Metamorphosis",
+      "rank": 1,
+      "top": [
+        "Metamorphosis"
+      ]
+    },
+    {
+      "id": "boo-04",
+      "category": "books",
+      "difficulty": "medium",
+      "expected": "To Kill a Mockingbird",
+      "rank": 1,
+      "top": [
+        "To Kill a Mockingbird",
+        "The Hate U Give",
+        "The Color Purple"
+      ]
+    },
+    {
+      "id": "boo-05",
+      "category": "books",
+      "difficulty": "medium",
+      "expected": "The Hobbit",
+      "rank": 1,
+      "top": [
+        "The Hobbit",
+        "The hidden kingdom [graphic novel]",
+        "The Dark Prophecy"
+      ]
+    },
+    {
+      "id": "boo-06",
+      "category": "books",
+      "difficulty": "hard",
+      "expected": "Dune",
+      "rank": 1,
+      "top": [
+        "Dune",
+        "Saga, Volume Five",
+        "Saga"
+      ]
+    },
+    {
+      "id": "boo-07",
+      "category": "books",
+      "difficulty": "hard",
+      "expected": "Pride and Prejudice",
+      "rank": 1,
+      "top": [
+        "Pride and Prejudice"
+      ]
+    },
+    {
+      "id": "boo-08",
+      "category": "books",
+      "difficulty": "hard",
+      "expected": "Dracula",
+      "rank": 1,
+      "top": [
+        "Dracula",
+        "Das Schloß"
+      ]
+    },
+    {
+      "id": "gam-01",
+      "category": "games",
+      "difficulty": "easy",
+      "expected": "Minecraft",
+      "rank": 1,
+      "top": [
+        "Minecraft"
+      ]
+    },
+    {
+      "id": "gam-02",
+      "category": "games",
+      "difficulty": "easy",
+      "expected": "Stardew Valley",
+      "rank": 1,
+      "top": [
+        "Stardew Valley"
+      ]
+    },
+    {
+      "id": "gam-03",
+      "category": "games",
+      "difficulty": "medium",
+      "expected": "The Witcher 3: Wild Hunt",
+      "rank": null,
+      "top": [
+        "Monster Hunter: World",
+        "Hellblade: Senua's Sacrifice"
+      ]
+    },
+    {
+      "id": "gam-04",
+      "category": "games",
+      "difficulty": "medium",
+      "expected": "Grand Theft Auto V",
+      "rank": 1,
+      "top": [
+        "Grand Theft Auto V",
+        "PAYDAY The Heist",
+        "L.A. Noire"
+      ]
+    },
+    {
+      "id": "gam-05",
+      "category": "games",
+      "difficulty": "medium",
+      "expected": "The Last Of Us",
+      "rank": 1,
+      "top": [
+        "The Last Of Us",
+        "The Last Of Us Remastered"
+      ]
+    },
+    {
+      "id": "gam-06",
+      "category": "games",
+      "difficulty": "hard",
+      "expected": "Portal 2",
+      "rank": 1,
+      "top": [
+        "Portal",
+        "Portal 2"
+      ]
+    },
+    {
+      "id": "gam-07",
+      "category": "games",
+      "difficulty": "hard",
+      "expected": "Horizon Zero Dawn",
+      "rank": 2,
+      "top": [
+        "Horizon Forbidden West",
+        "Horizon Zero Dawn"
+      ]
+    },
+    {
+      "id": "gam-08",
+      "category": "games",
+      "difficulty": "hard",
+      "expected": "The Elder Scrolls V: Skyrim",
+      "rank": 1,
+      "top": [
+        "The Elder Scrolls V: Skyrim"
+      ]
+    },
+    {
+      "id": "act-01",
+      "category": "actors",
+      "difficulty": "easy",
+      "expected": "Robert Downey Jr.",
+      "rank": 1,
+      "top": [
+        "Robert Downey Jr."
+      ]
+    },
+    {
+      "id": "act-02",
+      "category": "actors",
+      "difficulty": "easy",
+      "expected": "Leonardo DiCaprio",
+      "rank": 1,
+      "top": [
+        "Leonardo DiCaprio"
+      ]
+    },
+    {
+      "id": "act-03",
+      "category": "actors",
+      "difficulty": "medium",
+      "expected": "Morgan Freeman",
+      "rank": 1,
+      "top": [
+        "Morgan Freeman"
+      ]
+    },
+    {
+      "id": "act-04",
+      "category": "actors",
+      "difficulty": "medium",
+      "expected": "Keanu Reeves",
+      "rank": 1,
+      "top": [
+        "Keanu Reeves",
+        "Timothy Olyphant",
+        "Joe Pesci"
+      ]
+    },
+    {
+      "id": "act-05",
+      "category": "actors",
+      "difficulty": "medium",
+      "expected": "Tom Hanks",
+      "rank": 1,
+      "top": [
+        "Tom Hanks",
+        "Joe Pesci",
+        "Giancarlo Esposito"
+      ]
+    },
+    {
+      "id": "act-06",
+      "category": "actors",
+      "difficulty": "hard",
+      "expected": "Jim Carrey",
+      "rank": 1,
+      "top": [
+        "Jim Carrey",
+        "Matthew Lillard",
+        "Shawn Hatosy"
+      ]
+    },
+    {
+      "id": "act-07",
+      "category": "actors",
+      "difficulty": "hard",
+      "expected": "Anthony Hopkins",
+      "rank": null,
+      "top": [
+        "Jodie Foster",
+        "Joe Pesci"
+      ]
+    },
+    {
+      "id": "act-08",
+      "category": "actors",
+      "difficulty": "hard",
+      "expected": "Emma Watson",
+      "rank": 1,
+      "top": [
+        "Emma Watson",
+        "Inbar Lavi"
+      ]
+    }
+  ]
+}

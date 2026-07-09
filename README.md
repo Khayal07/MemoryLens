@@ -91,6 +91,45 @@ docker compose logs -f api      # watch API logs
 docker compose ps               # see what's running + ports
 ```
 
+## Evaluation — how accurate is it, really?
+
+We benchmark on a fixed dataset of **48 fuzzy-memory queries** (8 per category,
+easy/medium/hard), each with a known correct answer that exists in the catalog
+(`backend/eval/dataset.json`). Two numbers matter:
+
+- **recall@1** — how often the correct answer is the #1 result.
+- **MRR** — on average, how close to the top the correct answer lands (1.0 = always first).
+
+| Configuration | recall@1 | recall@5 | MRR |
+|---|---|---|---|
+| Keyword search only | 54% | 71% | 0.625 |
+| Vector search only | 54% | 77% | 0.644 |
+| Hybrid (vector + keyword, no rerank) | 58% | 77% | 0.653 |
+| Hybrid + cross-encoder rerank | 54% | 79% | 0.648 |
+| Hybrid + rerank + HyDE | 56% | 79% | 0.662 |
+| **Full pipeline (+ LLM reasoning + free-form fallback)** | **92%** | **96%** | **0.938** |
+
+What the table says, in plain words:
+
+- Retrieval alone finds the right item in its top-5 about 8 times out of 10; hybrid
+  fusion and reranking mostly improve *depth* (recall@5), not the #1 spot.
+- The big jump comes from the LLM layer: reasoning re-orders the shortlist and the
+  free-form fallback rescues queries the small catalog simply can't answer
+  (e.g. weak actor bios) — top-1 accuracy goes **54% → 92%**.
+- Hard queries (no title words at all) score 82% top-1 on the full pipeline vs 35%
+  on retrieval alone.
+
+Reproduce it yourself (results are saved to `backend/eval/results/`):
+
+```bash
+docker compose exec api python -m scripts.run_eval                  # retrieval baseline, free, ~40s
+docker compose exec api python -m scripts.run_eval --no-rerank --label no-rerank
+docker compose exec api python -m scripts.run_eval --leg vector --label vector-only
+docker compose exec api python -m scripts.run_eval --full --label full  # whole pipeline, uses the LLM (~$0.03)
+```
+
+Full run details and per-category breakdowns: [backend/eval/RESULTS.md](backend/eval/RESULTS.md).
+
 ## Troubleshooting
 
 **The site won't open at http://localhost:5173**

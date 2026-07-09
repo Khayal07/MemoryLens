@@ -23,9 +23,13 @@ def record_vote(
         raise ValidationError("Vote must be +1 or -1.")
     if db.get(Item, item_id) is None:
         raise NotFoundError("Item not found.")
-    # Ignore a search_id that doesn't exist rather than failing the vote.
-    if search_id is not None and db.get(Search, search_id) is None:
-        search_id = None
+    # Attach the vote to a search only when it exists AND belongs to this user —
+    # otherwise detach it (record the vote, drop the foreign/unknown search link).
+    # Prevents a user from tying feedback to someone else's search.
+    if search_id is not None:
+        search = db.get(Search, search_id)
+        if search is None or search.user_id != user_id:
+            search_id = None
 
     existing = db.execute(
         select(ResultFeedback).where(

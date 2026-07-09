@@ -1,7 +1,7 @@
 """Item routes. Currently just "more like this" — catalog neighbours of a grounded
 item. Public: no auth needed, no user data involved."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.ai.retriever import find_similar
@@ -14,7 +14,8 @@ router = APIRouter()
 @router.get("/items/{item_id}/similar", response_model=list[SimilarItem])
 def similar(
     item_id: int,
-    limit: int = 6,
+    # Cap the fan-out so a caller can't request an unbounded neighbour scan.
+    limit: int = Query(6, ge=1, le=50),
     db: Session = Depends(get_db),
 ) -> list[SimilarItem]:
     items = find_similar(db, item_id, k=limit)

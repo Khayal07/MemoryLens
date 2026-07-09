@@ -38,3 +38,6 @@ data/raw/
 # Local verification artifacts
 .playwright-mcp/
 *.png
+
+# Personal notes (never pushed)
+DEMO-DAY.md

@@ -1,6 +1,9 @@
 from functools import lru_cache
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_INSECURE_JWT_DEFAULT = "change-me-in-production"
 
 
 class Settings(BaseSettings):
@@ -37,9 +40,17 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     # Auth
-    jwt_secret: str = "change-me-in-production"
+    jwt_secret: str = _INSECURE_JWT_DEFAULT
     jwt_access_ttl_min: int = 15
     jwt_refresh_ttl_days: int = 7
+
+    # Abuse / cost controls on the paid LLM search. `search_rate_per_min` paces
+    # bursts; `search_daily_quota` is a hard per-user ceiling (see core/rate_limit).
+    search_rate_per_min: int = 10
+    search_daily_quota: int = 50
+    # Shared secret guarding /metrics in production (sent as X-Metrics-Token). Blank
+    # in development leaves the endpoint open for local Prometheus scraping.
+    metrics_token: str = ""
 
     # Local AI models
     embedding_model: str = "BAAI/bge-small-en-v1.5"
@@ -72,6 +83,23 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def is_production(self) -> bool:
+        return self.env.lower() != "development"
+
+    @model_validator(mode="after")
+    def _require_strong_secret_in_prod(self) -> "Settings":
+        """Fail fast at startup rather than silently signing tokens with the public
+        default secret — anyone could forge JWTs. Dev keeps the friendly default."""
+        if self.is_production and (
+            not self.jwt_secret or self.jwt_secret == _INSECURE_JWT_DEFAULT
+        ):
+            raise ValueError(
+                "JWT_SECRET must be set to a strong random value when ENV is not "
+                "'development' (generate one with: openssl rand -hex 32)."
+            )
+        return self
 
 
 @lru_cache

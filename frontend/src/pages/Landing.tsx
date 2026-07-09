@@ -213,7 +213,7 @@ function CategoriesScene() {
               transition={{ duration: 0.7, delay: i * 0.07, ease: [0.2, 0.7, 0.2, 1] }}
             >
               <Link
-                to={`/search/${c.key}`}
+                to="/register"
                 className="glass flex items-center gap-2.5 rounded-full px-5 py-3 text-[1rem]
                   font-semibold transition-colors hover:border-violet/60 hover:shadow-glow"
               >
@@ -255,11 +255,11 @@ function CtaScene() {
             Create account
           </Link>
           <Link
-            to="/search/movies"
+            to="/login"
             className="glass rounded-full px-7 py-3.5 text-[1.02rem] font-semibold
               transition-colors hover:border-violet/60"
           >
-            Try it first ↗
+            Sign in ↗
           </Link>
         </div>
       </m.div>

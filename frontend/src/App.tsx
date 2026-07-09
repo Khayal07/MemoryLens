@@ -29,7 +29,14 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { path: "/", element: <HomeGate /> },
-      { path: "/search/:category", element: <Search /> },
+      {
+        path: "/search/:category",
+        element: (
+          <Protected to="/register">
+            <Search />
+          </Protected>
+        ),
+      },
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
       { path: "/s/:token", element: <SharedResult /> },

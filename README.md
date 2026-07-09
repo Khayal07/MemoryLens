@@ -34,7 +34,7 @@ React SPA → FastAPI (routers → services → AI pipeline)
 
 Search pipeline: validate → clean → understand → hybrid retrieve (vector + keyword + weighted RRF) → rerank → LLM reasoning → confidence → free-form fallback → response.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full design.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the design, and **[docs/](docs/README.md)** for the full documentation set — [overview](docs/OVERVIEW.md), [pipeline](docs/PIPELINE.md), [API](docs/API.md), [data model](docs/DATA-MODEL.md), [features](docs/FEATURES.md), [catalog](docs/CATALOG.md), [configuration](docs/CONFIGURATION.md), [development](docs/DEVELOPMENT.md), [security](docs/SECURITY.md), and [changelog](docs/CHANGELOG.md).
 
 ---
 

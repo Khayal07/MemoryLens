@@ -16,8 +16,11 @@ class FakeLLM:
         self.payload = payload
         self.json_calls = 0
 
-    def complete_json(self, system: str, user: str, temperature: float = 0.2) -> str:
+    def complete_json(
+        self, system: str, user: str, temperature: float = 0.2, model: str | None = None
+    ) -> str:
         self.json_calls += 1
+        self.last_model = model
         return self.payload
 
     def complete_text(self, system: str, user: str, temperature: float = 0.3) -> str:

@@ -55,16 +55,22 @@ class LLMClient:
             )
         return providers
 
-    def complete_json(self, system: str, user: str, temperature: float = 0.2) -> str:
-        """Send a chat completion requesting a JSON object; return the raw content."""
-        return self._complete(system, user, temperature, json_object=True)
+    def complete_json(
+        self, system: str, user: str, temperature: float = 0.2, model: str | None = None
+    ) -> str:
+        """Send a chat completion requesting a JSON object; return the raw content.
+        `model` overrides the primary (OpenAI) provider's model for this one call —
+        used to spend a stronger model only where it matters (e.g. song identification).
+        """
+        return self._complete(system, user, temperature, json_object=True, model=model)
 
     def complete_text(self, system: str, user: str, temperature: float = 0.3) -> str:
         """Send a chat completion expecting free-form text (e.g. a HyDE passage)."""
         return self._complete(system, user, temperature, json_object=False)
 
     def _complete(
-        self, system: str, user: str, temperature: float, json_object: bool
+        self, system: str, user: str, temperature: float, json_object: bool,
+        model: str | None = None,
     ) -> str:
         if not self._providers:
             raise LLMError("No LLM provider configured (set OPENAI_API_KEY or OPENROUTER_API_KEY)")
@@ -72,7 +78,7 @@ class LLMClient:
         last_error: Exception | None = None
         for provider in self._providers:
             try:
-                return self._call(provider, system, user, temperature, json_object)
+                return self._call(provider, system, user, temperature, json_object, model)
             except LLMError as exc:
                 last_error = exc
                 log.warning("llm.provider_failed", provider=provider.name, error=str(exc))
@@ -85,9 +91,13 @@ class LLMClient:
         user: str,
         temperature: float,
         json_object: bool,
+        model: str | None = None,
     ) -> str:
+        # A per-call override only applies to OpenAI (the override ids are OpenAI
+        # models); a fallback provider keeps its own model so failover still works.
+        effective_model = model if (model and provider.name == "openai") else provider.model
         payload = {
-            "model": provider.model,
+            "model": effective_model,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -108,7 +118,7 @@ class LLMClient:
                 )
                 resp.raise_for_status()
                 data = resp.json()
-            log.info("llm.completed", provider=provider.name, model=provider.model)
+            log.info("llm.completed", provider=provider.name, model=effective_model)
             return data["choices"][0]["message"]["content"]
         except httpx.HTTPError as exc:
             raise LLMError(f"{provider.name} request failed: {exc}") from exc

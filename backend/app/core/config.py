@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # OpenAI (primary LLM reasoning)
     openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
+    openai_model: str = "gpt-4.1-nano"
     openai_base_url: str = "https://api.openai.com/v1"
 
     # OpenRouter (fallback LLM reasoning)
@@ -86,6 +86,10 @@ class Settings(BaseSettings):
     # memory can't match. One extra LLM call names the likely song (title+artist) and
     # feeds both retrieval legs. Kill-switch: SONG_GUESS_ENABLED=false.
     song_guess_enabled: bool = True
+    # Songs identification (song-guess + free-form hero) uses a stronger model than the
+    # default, since a small model maps lyrics to the wrong song; the rest of the
+    # pipeline stays on the fast/cheap default. Blank ⇒ use the default model.
+    song_identify_model: str = "gpt-4o-mini"
 
     @property
     def cors_origin_list(self) -> list[str]:

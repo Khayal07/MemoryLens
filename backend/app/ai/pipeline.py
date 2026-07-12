@@ -129,6 +129,7 @@ class SearchPipeline:
         clarify_enabled: bool = True,
         clarify_floor: float = 65.0,
         song_guess_enabled: bool = True,
+        song_identify_model: str = "",
     ) -> None:
         self.retriever = retriever
         self.reranker = reranker
@@ -142,6 +143,8 @@ class SearchPipeline:
         self.clarify_enabled = clarify_enabled
         self.clarify_floor = clarify_floor
         self.song_guess_enabled = song_guess_enabled
+        # A stronger model just for song identification (lyric→song); blank ⇒ default.
+        self.song_identify_model = song_identify_model or None
 
     def run(
         self, db: Session, category_key: str, query: str, max_results: int = 5
@@ -234,7 +237,9 @@ class SearchPipeline:
         Best-effort: retrieval never depends on the network."""
         try:
             raw = self.llm.complete_json(
-                song_guess.SYSTEM_PROMPT, song_guess.build_user_prompt(query)
+                song_guess.SYSTEM_PROMPT,
+                song_guess.build_user_prompt(query),
+                model=self.song_identify_model,
             )
             guess = parse_song_guess(raw)
         except SongGuessParseError as exc:
@@ -366,7 +371,10 @@ class SearchPipeline:
         try:
             system = identify.SYSTEM_PROMPT.format(category=category.display_name)
             user = identify.build_user_prompt(category.display_name, query)
-            ident = parse_identification(self.llm.complete_json(system, user))
+            # Songs need the stronger model to resolve a lyric to the right song; other
+            # categories stay on the fast default so latency isn't paid everywhere.
+            model = self.song_identify_model if category.key in _SONG_KEYS else None
+            ident = parse_identification(self.llm.complete_json(system, user, model=model))
         except (LLMError, IdentifyParseError) as exc:
             log.warning("pipeline.identify_failed", error=str(exc))
             return None
@@ -452,8 +460,15 @@ class SearchPipeline:
                     source_url=source_url,
                 )
                 db.add(item)
-            elif image_url and not item.image_url:
-                item.image_url = image_url  # backfill a poster we now have
+            else:
+                # Reuse the row but refresh it to THIS identification, so a re-searched
+                # title never shows a stale description/detail or a mismatched cover
+                # left by an earlier, different answer under the same slug.
+                item.description = description
+                item.item_metadata = metadata
+                item.source_url = source_url
+                if image_url:
+                    item.image_url = image_url
             db.flush()
             return item.id
         except Exception as exc:  # pragma: no cover - defensive
@@ -566,4 +581,5 @@ def get_pipeline() -> SearchPipeline:
         clarify_enabled=settings.clarify_enabled,
         clarify_floor=settings.clarify_floor,
         song_guess_enabled=settings.song_guess_enabled,
+        song_identify_model=settings.song_identify_model,
     )

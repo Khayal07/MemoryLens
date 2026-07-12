@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, clearTokens, getTokens, setTokens } from "../../lib/api";
+import { api, clearTokens, getTokens, setTokens, SESSION_EXPIRED_EVENT } from "../../lib/api";
 import type { Tokens, User } from "../../lib/types";
 
 interface AuthState {
@@ -34,6 +34,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void load();
+  }, []);
+
+  // When a background refresh fails, api.ts clears storage and fires this event;
+  // drop the user so Protected routes redirect to /login.
+  useEffect(() => {
+    const onExpired = () => setUser(null);
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
   }, []);
 
   async function signIn(tokens: Tokens) {

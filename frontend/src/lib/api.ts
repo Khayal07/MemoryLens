@@ -37,15 +37,68 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const tokens = getTokens();
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
-  };
-  if (tokens) headers.Authorization = `Bearer ${tokens.access_token}`;
+export const SESSION_EXPIRED_EVENT = "memorylens:session-expired";
 
-  const resp = await fetch(`${BASE}${path}`, { ...options, headers });
+// Single-flight refresh: many requests can 401 at once (e.g. a page load fires
+// several calls), but we mint exactly one new token pair and share it.
+let refreshInFlight: Promise<Tokens | null> | null = null;
+
+function refreshTokens(): Promise<Tokens | null> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    const refresh_token = getTokens()?.refresh_token;
+    if (!refresh_token) {
+      return sessionExpired();
+    }
+    try {
+      // Raw fetch — no Authorization header, no recursion back through request().
+      const resp = await fetch(`${BASE}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token }),
+      });
+      if (!resp.ok) return sessionExpired();
+      const tokens = (await resp.json()) as Tokens;
+      setTokens(tokens);
+      return tokens;
+    } catch {
+      return sessionExpired();
+    }
+  })();
+  return refreshInFlight.finally(() => {
+    refreshInFlight = null;
+  });
+}
+
+function sessionExpired(): null {
+  clearTokens();
+  window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  return null;
+}
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const doFetch = (accessToken?: string): Promise<Response> => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(options.headers as Record<string, string>),
+    };
+    if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    return fetch(`${BASE}${path}`, { ...options, headers });
+  };
+
+  let resp = await doFetch(getTokens()?.access_token);
+
+  // An expired access token 401s; transparently refresh once and retry. Skip
+  // /auth/* so a bad login/refresh doesn't loop.
+  if (
+    resp.status === 401 &&
+    !path.startsWith("/auth/") &&
+    getTokens()?.refresh_token
+  ) {
+    const refreshed = await refreshTokens();
+    if (refreshed) resp = await doFetch(refreshed.access_token);
+  }
+
   if (resp.status === 204) return undefined as T;
 
   const data = await resp.json().catch(() => null);

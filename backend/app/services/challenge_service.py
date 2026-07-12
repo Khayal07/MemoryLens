@@ -8,7 +8,7 @@ Guess checking reuses the pipeline's loose title matching (app/ai/matching.py)."
 import hashlib
 import json
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 
 import structlog
 from sqlalchemy import func, select
@@ -110,7 +110,7 @@ def _get_attempt(db: Session, user_id: int, challenge_id: int) -> ChallengeAttem
 
 
 def _get_or_create_today(db: Session, llm=None) -> DailyChallenge:
-    today = date.today()
+    today = datetime.now(timezone.utc).date()
     ch = db.execute(
         select(DailyChallenge).where(DailyChallenge.challenge_date == today)
     ).scalar_one_or_none()

@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     # Shared secret guarding /metrics in production (sent as X-Metrics-Token). Blank
     # in development leaves the endpoint open for local Prometheus scraping.
     metrics_token: str = ""
+    # Shared secret guarding /admin/* (sent as X-Admin-Token). Blank disables the
+    # admin surface entirely (fail closed) — it must be set to seed a prod catalog.
+    admin_token: str = ""
 
     # Local AI models
     embedding_model: str = "BAAI/bge-small-en-v1.5"

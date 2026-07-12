@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.admin import router as admin_router
 from app.api.v1.analytics import router as analytics_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.categories import router as categories_router
@@ -51,3 +52,4 @@ app.include_router(feedback_router, prefix="/api/v1", tags=["feedback"])
 app.include_router(analytics_router, prefix="/api/v1", tags=["analytics"])
 app.include_router(constellation_router, prefix="/api/v1", tags=["constellation"])
 app.include_router(challenge_router, prefix="/api/v1", tags=["challenge"])
+app.include_router(admin_router, prefix="/api/v1", tags=["admin"])

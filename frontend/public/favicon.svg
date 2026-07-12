@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <radialGradient id="lens" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#f5b468" />
+      <stop offset="100%" stop-color="#7c6bf5" />
+    </radialGradient>
+  </defs>
+  <!-- soft glow ring (matches the navbar logo's shadow halo) -->
+  <circle cx="16" cy="16" r="14" fill="none" stroke="#7c6bf5" stroke-opacity="0.18" stroke-width="3" />
+  <!-- aperture ring -->
+  <circle cx="16" cy="16" r="12.5" fill="none" stroke="#7c6bf5" stroke-width="2.5" />
+  <!-- lens core -->
+  <circle cx="16" cy="16" r="8.5" fill="url(#lens)" />
+</svg>

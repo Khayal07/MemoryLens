@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # OpenAI (primary LLM reasoning)
     openai_api_key: str = ""
-    openai_model: str = "gpt-4.1-nano"
+    openai_model: str = "gpt-4o-mini"
     openai_base_url: str = "https://api.openai.com/v1"
 
     # OpenRouter (fallback LLM reasoning)

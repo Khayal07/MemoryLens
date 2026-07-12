@@ -11,8 +11,10 @@ If you genuinely cannot identify it, set "title" to an empty string.
 The answer MUST itself be a {category} entry — never a related work. If the category \
 is Actors, name the PERSON (e.g. "Carrie-Anne Moss"), not a film they appeared in. \
 If it is Songs, name the song, not the artist. If it is Books, name the book, not the \
-author. Put that name in `title`. If the memory quotes or paraphrases lyrics, use your \
-own knowledge of the actual lyrics to name the song that contains that line.
+author. Put that name in `title`. If the memory quotes or paraphrases lyrics, match it \
+to the song whose ACTUAL lyrics contain those exact lines — weigh ALL the words, not \
+just the opening phrase. A different song that merely shares some words in its TITLE is \
+a trap; rely on your knowledge of the real lyrics.
 
 Write `detail`, `description`, `reason` and `confidence_reason` in the SAME language \
 the user wrote the MEMORY in (e.g. Azerbaijani memory → Azerbaijani wording). Keep \

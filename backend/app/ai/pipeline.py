@@ -20,9 +20,10 @@ from app.ai.confidence import compute_breakdown, compute_confidence
 from app.ai.identify import IdentifyParseError, parse_identification
 from app.ai.llm import LLMClient, LLMError
 from app.ai.matching import same_title, slug
-from app.ai.prompts import clarify, hyde, identify, translate
+from app.ai.prompts import clarify, hyde, identify, song_guess, translate
 from app.ai.prompts.reasoning import SYSTEM_PROMPT, build_user_prompt
 from app.ai.reasoning import LLMReasoning, ReasoningParseError, parse_reasoning
+from app.ai.song_guess import SongGuessParseError, parse_song_guess
 from app.ai.reranker import get_reranker
 from app.ai.retriever import HybridRetriever
 from app.ai.types import Candidate
@@ -127,6 +128,7 @@ class SearchPipeline:
         freeform_grey_margin: float = 8.0,
         clarify_enabled: bool = True,
         clarify_floor: float = 65.0,
+        song_guess_enabled: bool = True,
     ) -> None:
         self.retriever = retriever
         self.reranker = reranker
@@ -139,6 +141,7 @@ class SearchPipeline:
         self.freeform_grey_margin = freeform_grey_margin
         self.clarify_enabled = clarify_enabled
         self.clarify_floor = clarify_floor
+        self.song_guess_enabled = song_guess_enabled
 
     def run(
         self, db: Session, category_key: str, query: str, max_results: int = 5
@@ -150,9 +153,21 @@ class SearchPipeline:
         # English key for the local (English-only) retrieval + rerank models; the
         # original `cleaned` text still drives reasoning so answers stay in-language.
         retrieval_query = self._to_retrieval_query(cleaned)
-        embed_text = self._expand_query(category, retrieval_query)
+        # Songs: a lyric memory can't match a lyric-free catalog, so guess the song and
+        # feed the guess into BOTH legs. Other categories (or a failed/unsure guess) use
+        # the plain keyword query + HyDE-expanded embed text.
+        keyword_query = retrieval_query
+        expansion = (
+            self._expand_song(retrieval_query)
+            if category.key in _SONG_KEYS and self.song_guess_enabled
+            else None
+        )
+        if expansion is not None:
+            keyword_query, embed_text = expansion
+        else:
+            embed_text = self._expand_query(category, retrieval_query)
         candidates = self.retriever.search(
-            db, category.id, retrieval_query, k=30, embed_text=embed_text
+            db, category.id, keyword_query, k=30, embed_text=embed_text
         )
 
         if not candidates:
@@ -210,6 +225,32 @@ class SearchPipeline:
         if not hypothesis:
             return query
         return f"{query}\n{hypothesis}"
+
+    def _expand_song(self, query: str) -> tuple[str, str] | None:
+        """Songs-only: name the likely song from world knowledge (esp. from quoted
+        lyrics) and build separate keyword/embed queries so the grounded catalog row
+        can surface. Returns (keyword_query, embed_text), or None to fall back to plain
+        expansion — on an unsure guess (empty title), a parse error, or any LLM failure.
+        Best-effort: retrieval never depends on the network."""
+        try:
+            raw = self.llm.complete_json(
+                song_guess.SYSTEM_PROMPT, song_guess.build_user_prompt(query)
+            )
+            guess = parse_song_guess(raw)
+        except SongGuessParseError as exc:
+            log.warning("pipeline.song_guess_parse_failed", error=str(exc))
+            return None
+        except LLMError as exc:
+            log.warning("pipeline.song_guess_failed", error=str(exc))
+            return None
+        if not guess.title.strip():
+            return None
+        who = f" {guess.artist}".rstrip()
+        # Keyword leg (OR-mode tsquery) surfaces the guessed title/artist tokens.
+        keyword_query = f"{query} {guess.title}{who}".strip()
+        # Semantic leg: the literal memory plus a natural-language gloss of the guess.
+        embed_text = f"{query}\n{guess.title} by {guess.artist}. {guess.description}".strip()
+        return keyword_query, embed_text
 
     def _resolve_category(self, db: Session, category_key: str) -> Category:
         category = db.execute(
@@ -524,4 +565,5 @@ def get_pipeline() -> SearchPipeline:
         freeform_grey_margin=settings.freeform_grey_margin,
         clarify_enabled=settings.clarify_enabled,
         clarify_floor=settings.clarify_floor,
+        song_guess_enabled=settings.song_guess_enabled,
     )

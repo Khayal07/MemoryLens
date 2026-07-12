@@ -71,6 +71,31 @@ for every run below is in `eval/results/`.
    the wrong Silence-of-the-Lambs lead). A larger identify model would likely fix
    both; this is the documented small-model trade-off.
 
+## Lyric-aware song-guess (2026-07-12)
+
+Songs was the weakest *full-pipeline* category (87.5%). Root cause: the catalog
+stores no lyrics, but a song memory is usually a quoted/paraphrased lyric, so neither
+retrieval leg can match. Fix: a songs-only LLM expansion (`--song-guess`) names the
+likely song (title + artist) from world knowledge and feeds it into both retrieval
+legs; the artist was also folded into the song embedding/tsvector (fixture re-ingested).
+
+| Run (songs only, n=8) | recall@1 | recall@3 | MRR |
+|---|---|---|---|
+| retrieval, no-rerank (baseline) | 50.0% | 87.5% | 0.677 |
+| retrieval, no-rerank + song-guess | **100%** | **100%** | **1.000** |
+| full-pipeline (baseline) | 87.5% | — | — |
+| full-pipeline + song-guess | **100%** | **100%** | **1.000** |
+
+Every song — including all three hard lyric cases — now ranks #1. The exact-title the
+guess injects dominates the keyword leg, so the retrieval-only lift is largest with the
+cross-encoder OFF (the cross-encoder, scored on the literal lyric against a lyric-free
+description, otherwise reorders the correct song down to #2 — which is why the default
+reranked retrieval number appears flat at 50%; the LLM reasoning stage recovers it in
+the full pipeline). Regression: the full 48-query retrieval baseline is unchanged
+(54.2% recall@1, MRR 0.648) — the embedding change touches only rows that carry an
+`artist` (songs). Smoke: "is this the real life is this just fantasy" → Bohemian
+Rhapsody as a grounded 92% result, the real opening line quoted in the reason.
+
 ## Reproduce
 
 ```bash
@@ -80,6 +105,7 @@ docker compose exec api python -m scripts.run_eval --leg vector --label vector-o
 docker compose exec api python -m scripts.run_eval --leg keyword --label keyword-only
 docker compose exec api python -m scripts.run_eval --hyde --label hyde
 docker compose exec api python -m scripts.run_eval --full --label full-pipeline
+docker compose exec api python -m scripts.run_eval --category songs --no-rerank --song-guess --label songs-guess
 ```
 
 Retrieval modes are LLM-free and deterministic. `--hyde` ≈ $0.01, `--full` ≈ $0.03

@@ -24,6 +24,23 @@ def test_embedding_text_combines_title_and_description() -> None:
     assert item.embedding_text() == "Title. A plot."
 
 
+def test_embedding_text_folds_in_song_artist() -> None:
+    # Songs carry an artist so "<lyric> by <artist>" memories match; the artist lands
+    # in both the embedding and the keyword tsvector.
+    item = NormalizedItem(
+        external_id="s", title="Bohemian Rhapsody", description="An operatic rock epic.",
+        metadata={"artist": "Queen"},
+    )
+    assert item.embedding_text() == "Bohemian Rhapsody. Queen. An operatic rock epic."
+
+
+def test_embedding_text_without_artist_is_unchanged() -> None:
+    item = NormalizedItem(
+        external_id="m", title="Title", description="A plot.", metadata={"year": 1999}
+    )
+    assert item.embedding_text() == "Title. A plot."
+
+
 def test_fixture_source_forces_fixture_adapter() -> None:
     assert isinstance(get_adapter("movies", source="fixture"), FixtureAdapter)
 

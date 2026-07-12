@@ -104,6 +104,27 @@ def _hyde_expand(llm, category_name: str, query: str) -> str:
     return f"{query}\n{hypothesis}" if hypothesis else query
 
 
+def _song_guess_expand(llm, query: str) -> tuple[str, str] | None:
+    """Songs-only guess expansion, mirroring pipeline._expand_song. Returns
+    (keyword_query, embed_text) or None to fall back to the raw query."""
+    from app.ai.llm import LLMError
+    from app.ai.prompts import song_guess
+    from app.ai.song_guess import SongGuessParseError, parse_song_guess
+
+    try:
+        raw = llm.complete_json(song_guess.SYSTEM_PROMPT, song_guess.build_user_prompt(query))
+        guess = parse_song_guess(raw)
+    except (SongGuessParseError, LLMError) as exc:
+        print(f"    song-guess failed ({exc}); using raw query")
+        return None
+    if not guess.title.strip():
+        return None
+    who = f" {guess.artist}".rstrip()
+    keyword_query = f"{query} {guess.title}{who}".strip()
+    embed_text = f"{query}\n{guess.title} by {guess.artist}. {guess.description}".strip()
+    return keyword_query, embed_text
+
+
 # --- run ---------------------------------------------------------------------------
 
 
@@ -127,7 +148,7 @@ def run(args) -> dict:
     top_n = max(args.k, settings.rerank_top_n)
 
     llm = None
-    if args.hyde or args.full:
+    if args.hyde or args.full or args.song_guess:
         from app.ai.llm import LLMClient
 
         llm = LLMClient()
@@ -153,11 +174,16 @@ def run(args) -> dict:
                 titles = [r.title for r in response.results]
             else:
                 embed_text = query
-                if args.hyde:
+                keyword_query = query
+                if args.song_guess and case["category"] == "songs":
+                    expansion = _song_guess_expand(llm, query)
+                    if expansion is not None:
+                        keyword_query, embed_text = expansion
+                elif args.hyde:
                     cat_name = case["category"].capitalize()
                     embed_text = _hyde_expand(llm, cat_name, query)
                 candidates = _retrieve(
-                    db, retriever, cat_ids[case["category"]], query, args.leg, embed_text
+                    db, retriever, cat_ids[case["category"]], keyword_query, args.leg, embed_text
                 )
                 if reranker is not None:
                     candidates = reranker.rerank(query, candidates, top_n=top_n)
@@ -187,6 +213,7 @@ def run(args) -> dict:
             "leg": args.leg,
             "rerank": args.rerank,
             "hyde": args.hyde,
+            "song_guess": args.song_guess,
             "k": args.k,
             "cases": len(per_case),
         },
@@ -246,6 +273,8 @@ def main() -> None:
                         help="score raw retrieval order (skip the cross-encoder)")
     parser.add_argument("--hyde", action="store_true",
                         help="expand queries with HyDE (adds 1 LLM call per query)")
+    parser.add_argument("--song-guess", dest="song_guess", action="store_true",
+                        help="songs-only lyric-aware guess expansion (1 LLM call per song query)")
     parser.add_argument("--full", action="store_true",
                         help="run the whole SearchPipeline (LLM reasoning + free-form)")
     parser.add_argument("--category", help="only run one category's cases")

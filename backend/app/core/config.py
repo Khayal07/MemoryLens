@@ -82,6 +82,10 @@ class Settings(BaseSettings):
     # answer back into a refined re-search.
     clarify_enabled: bool = True
     clarify_floor: float = 65.0
+    # Songs-only lyric-aware expansion: the songs catalog has no lyrics, so a lyric
+    # memory can't match. One extra LLM call names the likely song (title+artist) and
+    # feeds both retrieval legs. Kill-switch: SONG_GUESS_ENABLED=false.
+    song_guess_enabled: bool = True
 
     @property
     def cors_origin_list(self) -> list[str]:

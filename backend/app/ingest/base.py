@@ -19,8 +19,13 @@ class NormalizedItem:
     metadata: dict = field(default_factory=dict)
 
     def embedding_text(self) -> str:
-        """Text fed to the embedder. Title carries the most signal; description adds
-        the plot/attribute details users tend to half-remember."""
+        """Text fed to the embedder (and the keyword tsvector). Title carries the most
+        signal; description adds the plot/attribute details users tend to half-remember.
+        Songs also fold in the artist so "<lyric> by <artist>" style memories match —
+        only songs carry `artist`, so every other category is byte-identical."""
+        artist = (self.metadata or {}).get("artist")
+        if artist:
+            return f"{self.title}. {artist}. {self.description}".strip()
         return f"{self.title}. {self.description}".strip()
 
 

@@ -1,5 +1,5 @@
 import { AnimatePresence, m } from "framer-motion";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
 import AuroraBackground from "./AuroraBackground";
@@ -15,6 +15,50 @@ export default function Layout() {
   const { isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => setMenuOpen(false), [location.pathname]);
+
+  function navItems(close: () => void) {
+    return isAuthenticated ? (
+      <>
+        <Link to="/collections" className={navLink} onClick={close}>
+          Collections
+        </Link>
+        <Link to="/history" className={navLink} onClick={close}>
+          History
+        </Link>
+        <Link to="/analytics" className={navLink} onClick={close}>
+          Analytics
+        </Link>
+        <Link to="/constellation" className={navLink} onClick={close}>
+          Constellation
+        </Link>
+        <Link to="/challenge" className={navLink} onClick={close}>
+          Daily
+        </Link>
+        <button
+          className={navLink + " text-left"}
+          onClick={() => {
+            close();
+            signOut();
+            navigate("/");
+          }}
+        >
+          Sign out
+        </button>
+      </>
+    ) : (
+      <>
+        <Link to="/login" className={navLink} onClick={close}>
+          Sign in
+        </Link>
+        <Link to="/register" className={navLink} onClick={close}>
+          Create account
+        </Link>
+      </>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -27,8 +71,8 @@ export default function Layout() {
         Skip to content
       </a>
 
-      <header className="sticky top-0 z-20 border-b border-glass-line bg-night/40 backdrop-blur-xl backdrop-saturate-150">
-        <div className="mx-auto flex h-16 max-w-[920px] items-center justify-between px-6">
+      <header className="sticky top-0 z-20 border-b border-glass-line bg-night/85 md:bg-night/40 md:backdrop-blur-xl md:backdrop-saturate-150">
+        <div className="mx-auto flex h-16 max-w-[920px] items-center justify-between px-4 sm:px-6">
           <Link
             to="/"
             className="flex items-center gap-2.5 font-display text-[1.1rem] font-bold tracking-[-0.02em]"
@@ -46,46 +90,48 @@ export default function Layout() {
             MemoryLens
           </Link>
 
-          <nav className="flex items-center gap-1.5">
-            {isAuthenticated ? (
-              <>
-                <Link to="/collections" className={navLink}>
-                  Collections
-                </Link>
-                <Link to="/history" className={navLink}>
-                  History
-                </Link>
-                <Link to="/analytics" className={navLink}>
-                  Analytics
-                </Link>
-                <Link to="/constellation" className={navLink}>
-                  Constellation
-                </Link>
-                <Link to="/challenge" className={navLink}>
-                  Daily
-                </Link>
-                <button
-                  className={navLink}
-                  onClick={() => {
-                    signOut();
-                    navigate("/");
-                  }}
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className={navLink}>
-                  Sign in
-                </Link>
-                <Link to="/register" className={navLink}>
-                  Create account
-                </Link>
-              </>
-            )}
-          </nav>
+          <nav className="hidden items-center gap-1.5 md:flex">{navItems(() => {})}</nav>
+
+          <button
+            type="button"
+            className="rounded-[10px] p-2 text-muted transition-colors hover:bg-raised hover:text-ink
+              focus-visible:outline-2 focus-visible:outline-violet-soft md:hidden"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
+            aria-label="Menu"
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              {menuOpen ? (
+                <path
+                  d="M5 5l10 10M15 5L5 15"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              ) : (
+                <path
+                  d="M3 5.5h14M3 10h14M3 14.5h14"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              )}
+            </svg>
+          </button>
         </div>
+
+        {menuOpen && (
+          <m.nav
+            id="mobile-nav"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
+            className="flex flex-col gap-1 border-t border-glass-line px-4 py-3 md:hidden"
+          >
+            {navItems(() => setMenuOpen(false))}
+          </m.nav>
+        )}
       </header>
 
       <main id="main" className="flex-1 py-12 md:py-12">

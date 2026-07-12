@@ -8,6 +8,7 @@ import {
 } from "framer-motion";
 import { useRef, type PointerEvent, type ReactNode } from "react";
 import { cn } from "../../lib/cn";
+import useMediaQuery from "../../lib/useMediaQuery";
 
 interface Props {
   children: ReactNode;
@@ -21,6 +22,7 @@ interface Props {
  *  follows the pointer. Reduced-motion users get a plain, still surface. */
 export default function TiltCard({ children, className, max = 7 }: Props) {
   const reduce = useReducedMotion();
+  const coarse = useMediaQuery("(hover: none), (pointer: coarse)");
   const ref = useRef<HTMLDivElement>(null);
 
   const px = useMotionValue(0.5);
@@ -42,7 +44,7 @@ export default function TiltCard({ children, className, max = 7 }: Props) {
     py.set(0.5);
   }
 
-  if (reduce) return <div className={className}>{children}</div>;
+  if (reduce || coarse) return <div className={cn("h-full", className)}>{children}</div>;
 
   return (
     <div ref={ref} onPointerMove={onMove} onPointerLeave={onLeave} className="h-full [perspective:1000px]">

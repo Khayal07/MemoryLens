@@ -99,22 +99,42 @@
     outline-offset: 2px;
     border-radius: 4px;
   }
+
+  /* fixed-attachment gradients force full-page repaints while scrolling on
+     mobile — let them scroll with the page there */
+  @media (max-width: 767px) {
+    body {
+      background-attachment: scroll;
+    }
+  }
 }
 
-/* ---------- frosted glass surface ---------- */
+/* ---------- frosted glass surface ----------
+   backdrop-filter repaints on every scroll frame, which stutters on mobile
+   GPUs — below md the surfaces go near-opaque instead of blurred. */
 @utility glass {
   background: var(--color-glass);
-  backdrop-filter: blur(16px) saturate(1.4);
-  -webkit-backdrop-filter: blur(16px) saturate(1.4);
   border: 1px solid var(--color-glass-line);
   box-shadow: var(--shadow-glass);
+  @media (max-width: 767px) {
+    background: rgba(23, 26, 46, 0.92);
+  }
+  @media (min-width: 768px) {
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
 }
 @utility glass-strong {
   background: var(--color-glass-strong);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
   border: 1px solid var(--color-glass-line);
   box-shadow: var(--shadow-glass);
+  @media (max-width: 767px) {
+    background: rgba(23, 26, 46, 0.92);
+  }
+  @media (min-width: 768px) {
+    backdrop-filter: blur(20px) saturate(1.5);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

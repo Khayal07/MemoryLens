@@ -100,7 +100,7 @@ export default function Search() {
       </div>
 
       <form
-        className="glass-strong flex gap-2.5 rounded-2xl p-2.5
+        className="glass-strong flex flex-col gap-2.5 rounded-2xl p-2.5 sm:flex-row
           transition-shadow focus-within:shadow-glow focus-within:ring-2 focus-within:ring-violet/50"
         onSubmit={(e) => {
           e.preventDefault();
@@ -133,30 +133,34 @@ export default function Search() {
             className="max-h-40 min-h-7 flex-1 resize-none bg-transparent px-3 py-3 text-[1.05rem] leading-[1.45] text-ink outline-none placeholder:text-faint"
           />
         )}
-        <button
-          type="button"
-          onClick={toggleMode}
-          aria-pressed={fragmentsMode}
-          aria-label={fragmentsMode ? "Switch to free text" : "Switch to fragment mode"}
-          title={fragmentsMode ? "Free text" : "Fragments"}
-          className={`flex h-10 w-10 items-center justify-center self-center rounded-full border transition-all ${
-            fragmentsMode
-              ? "border-violet/60 bg-violet/15 text-violet-soft shadow-glow"
-              : "border-glass-line text-muted hover:border-violet/50 hover:text-ink"
-          }`}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="3" y="5" width="9" height="6" rx="3" stroke="currentColor" strokeWidth="2" />
-            <rect x="12" y="13" width="9" height="6" rx="3" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        </button>
-        <VoiceInput
-          value={fragmentsMode ? draft : query}
-          onChange={fragmentsMode ? setDraft : setQuery}
-        />
-        <Button type="submit" disabled={mutation.isPending} className="self-stretch">
-          {mutation.isPending ? "Focusing…" : "Recall"}
-        </Button>
+        {/* Controls: inline on desktop; a right-aligned row under the input on mobile
+            so the Recall button never overflows off the edge. */}
+        <div className="flex items-center gap-2.5 self-end sm:self-auto">
+          <button
+            type="button"
+            onClick={toggleMode}
+            aria-pressed={fragmentsMode}
+            aria-label={fragmentsMode ? "Switch to free text" : "Switch to fragment mode"}
+            title={fragmentsMode ? "Free text" : "Fragments"}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border transition-all ${
+              fragmentsMode
+                ? "border-violet/60 bg-violet/15 text-violet-soft shadow-glow"
+                : "border-glass-line text-muted hover:border-violet/50 hover:text-ink"
+            }`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="5" width="9" height="6" rx="3" stroke="currentColor" strokeWidth="2" />
+              <rect x="12" y="13" width="9" height="6" rx="3" stroke="currentColor" strokeWidth="2" />
+            </svg>
+          </button>
+          <VoiceInput
+            value={fragmentsMode ? draft : query}
+            onChange={fragmentsMode ? setDraft : setQuery}
+          />
+          <Button type="submit" disabled={mutation.isPending} className="self-stretch">
+            {mutation.isPending ? "Focusing…" : "Recall"}
+          </Button>
+        </div>
       </form>
 
       {!response && !mutation.isPending && (

@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   m,
-  useMotionTemplate,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
@@ -10,6 +9,7 @@ import {
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
+import useMediaQuery from "../lib/useMediaQuery";
 
 /** Signed-out landing: a scroll-driven aperture story. Each scene is a tall wrapper
  *  with a sticky viewport; scroll progress drives the animation, so the story plays
@@ -28,7 +28,7 @@ const FALLBACK_CATEGORIES = [
 ];
 
 /** Scene 1 — a giant aperture ring draws itself and irises open onto the title. */
-function ApertureScene({ reduce }: { reduce: boolean }) {
+function ApertureScene({ reduce, coarse }: { reduce: boolean; coarse: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   // Partial rings at rest so the first paint already reads as an aperture.
@@ -38,6 +38,10 @@ function ApertureScene({ reduce }: { reduce: boolean }) {
   const titleOpacity = useTransform(scrollYProgress, [0.18, 0.5], [0, 1]);
   const titleY = useTransform(scrollYProgress, [0.18, 0.5], [28, 0]);
   const hintOpacity = useTransform(scrollYProgress, [0, 0.12], [1, 0]);
+  // Touch devices can't afford re-rasterizing a near-fullscreen SVG stroke every
+  // frame: draw full rings and fade the whole svg in via composited opacity instead.
+  const svgOpacity = useTransform(scrollYProgress, [0, 0.4], [0, 0.7]);
+  const drawStyle = { pathLength: reduce || coarse ? 1 : draw };
 
   return (
     <div ref={ref} className={reduce ? "" : "relative h-[220vh]"}>
@@ -49,26 +53,32 @@ function ApertureScene({ reduce }: { reduce: boolean }) {
         <m.svg
           aria-hidden="true"
           viewBox="0 0 400 400"
-          className="absolute h-[88vmin] w-[88vmin] opacity-70"
-          style={reduce ? undefined : { scale, rotate }}
+          className="absolute h-[88vmin] w-[88vmin] opacity-70 will-change-transform"
+          style={
+            reduce
+              ? undefined
+              : coarse
+                ? { scale, rotate, opacity: svgOpacity }
+                : { scale, rotate }
+          }
         >
           {/* Staggered start angles so partial draw reads as iris blades, not arcs. */}
           <m.circle
             cx="200" cy="200" r="180" fill="none"
             stroke="var(--color-violet)" strokeWidth="1.5" strokeLinecap="round"
-            style={{ pathLength: reduce ? 1 : draw }}
+            style={drawStyle}
           />
           <m.circle
             cx="200" cy="200" r="140" fill="none"
             stroke="var(--color-amber)" strokeWidth="1" strokeDasharray="3 10"
             transform="rotate(140 200 200)"
-            style={{ pathLength: reduce ? 1 : draw }}
+            style={drawStyle}
           />
           <m.circle
             cx="200" cy="200" r="102" fill="none"
             stroke="var(--color-violet-soft)" strokeWidth="2" strokeLinecap="round"
             transform="rotate(250 200 200)"
-            style={{ pathLength: reduce ? 1 : draw }}
+            style={drawStyle}
           />
         </m.svg>
 
@@ -107,19 +117,31 @@ function RecallScene({ reduce }: { reduce: boolean }) {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const [chars, setChars] = useState(reduce ? SENTENCE.length : 0);
   const [conf, setConf] = useState(reduce ? FINAL_CONFIDENCE : 0);
+  // Only re-render when the integer actually changes, not on every scroll frame.
+  const lastChars = useRef(chars);
+  const lastConf = useRef(conf);
 
   const typing = useTransform(scrollYProgress, [0.05, 0.42], [0, 1]);
-  useMotionValueEvent(typing, "change", (v) =>
-    setChars(Math.round(Math.max(0, Math.min(1, v)) * SENTENCE.length))
-  );
+  useMotionValueEvent(typing, "change", (v) => {
+    const next = Math.round(Math.max(0, Math.min(1, v)) * SENTENCE.length);
+    if (next !== lastChars.current) {
+      lastChars.current = next;
+      setChars(next);
+    }
+  });
   const confProg = useTransform(scrollYProgress, [0.5, 0.85], [0, 1]);
-  useMotionValueEvent(confProg, "change", (v) =>
-    setConf(Math.round(Math.max(0, Math.min(1, v)) * FINAL_CONFIDENCE))
-  );
+  useMotionValueEvent(confProg, "change", (v) => {
+    const next = Math.round(Math.max(0, Math.min(1, v)) * FINAL_CONFIDENCE);
+    if (next !== lastConf.current) {
+      lastConf.current = next;
+      setConf(next);
+    }
+  });
 
-  const blur = useTransform(scrollYProgress, [0.45, 0.82], [18, 0]);
-  const gray = useTransform(scrollYProgress, [0.45, 0.82], [1, 0]);
-  const filter = useMotionTemplate`blur(${blur}px) grayscale(${gray})`;
+  // "Develops sharp" via an opacity crossfade between a statically-blurred ghost and
+  // the sharp poster — never animates `filter`, so it stays GPU-composited and smooth.
+  const ghostOpacity = useTransform(scrollYProgress, [0.45, 0.82], [1, 0]);
+  const sharpOpacity = useTransform(scrollYProgress, [0.45, 0.82], [0, 1]);
   const cardOpacity = useTransform(scrollYProgress, [0.38, 0.52], [0, 1]);
   const cardY = useTransform(scrollYProgress, [0.38, 0.55], [48, 0]);
 
@@ -147,14 +169,26 @@ function RecallScene({ reduce }: { reduce: boolean }) {
             ring-1 ring-violet/40 shadow-glow"
           style={reduce ? undefined : { opacity: cardOpacity, y: cardY }}
         >
-          <m.div
-            aria-hidden="true"
-            className="flex h-40 w-28 shrink-0 items-center justify-center rounded-xl
-              bg-[linear-gradient(160deg,#2a2350,#151129_60%,#3d2e12)] text-[2.6rem]"
-            style={reduce ? undefined : { filter }}
-          >
-            ⚖️
-          </m.div>
+          <div aria-hidden="true" className="relative h-40 w-28 shrink-0">
+            {!reduce && (
+              <m.div
+                className="absolute inset-0 flex items-center justify-center rounded-xl
+                  bg-[linear-gradient(160deg,#2a2350,#151129_60%,#3d2e12)] text-[2.6rem]
+                  blur-[14px] grayscale [will-change:opacity]"
+                style={{ opacity: ghostOpacity }}
+              >
+                ⚖️
+              </m.div>
+            )}
+            <m.div
+              className="absolute inset-0 flex items-center justify-center rounded-xl
+                bg-[linear-gradient(160deg,#2a2350,#151129_60%,#3d2e12)] text-[2.6rem]
+                [will-change:opacity]"
+              style={reduce ? undefined : { opacity: sharpOpacity }}
+            >
+              ⚖️
+            </m.div>
+          </div>
           <div className="min-w-0 flex-1">
             <p className="text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-faint">
               …and it finds the real thing
@@ -269,10 +303,12 @@ function CtaScene() {
 
 export default function Landing() {
   const reduce = useReducedMotion() ?? false;
+  // Touch devices stutter on per-frame SVG re-rasterization — lighten those scenes.
+  const coarse = useMediaQuery("(hover: none), (pointer: coarse)");
   return (
     // Full-bleed breakout from the layout's 920px column — scenes own the viewport.
     <div className="relative left-1/2 w-screen -translate-x-1/2 -my-12">
-      <ApertureScene reduce={reduce} />
+      <ApertureScene reduce={reduce} coarse={coarse} />
       <RecallScene reduce={reduce} />
       <CategoriesScene />
       <CtaScene />

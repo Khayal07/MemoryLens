@@ -8,7 +8,7 @@ import redis
 import structlog
 
 from app.ai.cleaning import clean_query
-from app.infra.redis import get_redis
+from app.infra.redis import get_redis, note_redis_failure, redis_unavailable
 from app.schemas.search import SearchResponse
 
 log = structlog.get_logger()
@@ -22,9 +22,12 @@ def _key(category: str, query: str) -> str:
 
 
 def get_cached(category: str, query: str) -> SearchResponse | None:
+    if redis_unavailable():
+        return None
     try:
         raw = get_redis().get(_key(category, query))
     except redis.RedisError as exc:
+        note_redis_failure()
         log.warning("cache.read_failed", error=str(exc))
         return None
     if not raw:
@@ -33,7 +36,10 @@ def get_cached(category: str, query: str) -> SearchResponse | None:
 
 
 def set_cached(category: str, query: str, response: SearchResponse) -> None:
+    if redis_unavailable():
+        return
     try:
         get_redis().set(_key(category, query), response.model_dump_json(), ex=TTL_SECONDS)
     except redis.RedisError as exc:
+        note_redis_failure()
         log.warning("cache.write_failed", error=str(exc))

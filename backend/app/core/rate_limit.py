@@ -20,7 +20,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.errors import RateLimitedError
 from app.core.security import decode_token
-from app.infra.redis import get_redis
+from app.infra.redis import get_redis, note_redis_failure, redis_unavailable
 
 log = structlog.get_logger()
 
@@ -71,11 +71,14 @@ def rate_limiter(scope: str, limit: int, window_seconds: int = 60):
     """IP-keyed fixed-window limiter (auth endpoints — there's no user yet)."""
 
     def dependency(request: Request) -> None:
+        if redis_unavailable():
+            return  # circuit open — fail open without a slow connect attempt
         key = f"rl:{scope}:ip:{_client_ip(request)}"
         try:
             if _incr_with_ttl(key, window_seconds) > limit:
                 raise RateLimitedError("Too many requests. Please slow down.")
         except redis.RedisError as exc:
+            note_redis_failure()
             log.warning("rate_limit.redis_unavailable", error=str(exc))  # fail open
 
     return dependency
@@ -89,11 +92,14 @@ def user_rate_limiter(scope: str, limit: int, window_seconds: int = 60):
         request: Request,
         creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
     ) -> None:
+        if redis_unavailable():
+            return  # circuit open — fail open without a slow connect attempt
         key = f"rl:{scope}:{_identity(request, creds)}"
         try:
             if _incr_with_ttl(key, window_seconds) > limit:
                 raise RateLimitedError("Too many requests. Please slow down.")
         except redis.RedisError as exc:
+            note_redis_failure()
             log.warning("rate_limit.redis_unavailable", error=str(exc))  # fail open
 
     return dependency
@@ -107,6 +113,8 @@ def daily_quota(scope: str, limit: int):
         request: Request,
         creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
     ) -> None:
+        if redis_unavailable():
+            return  # circuit open — fail open without a slow connect attempt
         day = dt.datetime.now(dt.UTC).strftime("%Y-%m-%d")
         key = f"q:{scope}:{_identity(request, creds)}:{day}"
         try:
@@ -115,6 +123,7 @@ def daily_quota(scope: str, limit: int):
                     "Daily search limit reached. Please try again tomorrow."
                 )
         except redis.RedisError as exc:
+            note_redis_failure()
             log.warning("rate_limit.redis_unavailable", error=str(exc))  # fail open
 
     return dependency

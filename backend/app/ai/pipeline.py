@@ -8,6 +8,7 @@ catalog items. Confidence is computed from blended signals, not the model's clai
 
 import re
 import urllib.parse
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 
 import structlog
@@ -38,6 +39,11 @@ from app.infra.tmdb import fetch_person_image
 from app.schemas.search import MismatchSuggestion, ResultItem, SearchResponse
 
 log = structlog.get_logger()
+
+# Marks "no identification was pre-computed" for _maybe_add_freeform, so a caller can
+# still pass an explicit None (the LLM ran but identified nothing) distinctly from the
+# direct-call path that computes it lazily itself.
+_UNSET = object()
 
 _REPAIR_HINT = "\n\nIMPORTANT: respond with ONLY valid JSON of the required shape."
 # Anything outside 7-bit ASCII implies a non-English memory worth translating for
@@ -184,20 +190,52 @@ class SearchPipeline:
             )
 
         reranked = self.reranker.rerank(retrieval_query, candidates, top_n=self.rerank_top_n)
-        reasoning = self._reason(category, cleaned, reranked)
+        # The three network calls that follow (reason, free-form identify, clarify) all
+        # depend only on the query + reranked candidates, so run them CONCURRENTLY instead
+        # of back-to-back — this is the bulk of a search's wall-clock time. Each result is
+        # then GATED exactly as before, so speculative calls that turn out unneeded are
+        # simply discarded (they never reach the user).
+        reasoning, ident, question = self._reason_identify_clarify(category, cleaned, reranked)
         results, suggestion = self._build_results(
             category_key, cleaned, reranked, reasoning, max_results
         )
-        results = self._maybe_add_freeform(db, category, cleaned, results, max_results)
+        results = self._maybe_add_freeform(
+            db, category, cleaned, results, max_results, precomputed_ident=ident
+        )
+        # Akinator: judged on the FINAL results (free-form hero included) — the question
+        # was pre-computed above but is only surfaced while the answer is still unsettled.
+        clarifying_question = question if self._should_clarify(results) else None
         return SearchResponse(
             query=query,
             category=category_key,
             results=results,
             suggestion=suggestion,
-            # Akinator: judged on the FINAL results (free-form hero included) — asked
-            # only while the answer is genuinely unsettled (see _maybe_clarify).
-            clarifying_question=self._maybe_clarify(category, cleaned, results),
+            clarifying_question=clarifying_question,
         )
+
+    def _reason_identify_clarify(self, category, query, reranked):
+        """Fan the three independent LLM calls out across threads and join. The LLM client
+        is stateless (each call opens its own httpx client), so concurrent calls are safe;
+        crucially NO database work happens here — DB writes (materialize) stay on the main
+        thread in _build_freeform_item. A disabled feature simply isn't submitted."""
+        with ThreadPoolExecutor(max_workers=3) as ex:
+            reason_fut = ex.submit(self._reason, category, query, reranked)
+            ident_fut = (
+                ex.submit(self._identify_llm, category, query)
+                if self.freeform_enabled
+                else None
+            )
+            clarify_fut = (
+                ex.submit(
+                    self._clarify_question, category, query, [c.title for c in reranked[:5]]
+                )
+                if self.clarify_enabled
+                else None
+            )
+            reasoning = reason_fut.result()
+            ident = ident_fut.result() if ident_fut is not None else None
+            question = clarify_fut.result() if clarify_fut is not None else None
+        return reasoning, ident, question
 
     def _to_retrieval_query(self, query: str) -> str:
         """Translate a non-English memory to English for the local retrieval/rerank
@@ -288,30 +326,36 @@ class SearchPipeline:
         self, category, query: str, results: list[ResultItem]
     ) -> str | None:
         """Akinator mode: when the final answer is still uncertain, ask the LLM for ONE
-        clarifying question the user can answer to refine the search. Certainty means
-        either a grounded top result at/above `clarify_floor`, or a free-form hero the
-        catalog CORROBORATES (its best grounded alternative names the same title) — an
-        uncorroborated world-knowledge guess is exactly when one more detail helps.
-        Best-effort — any LLM failure, an empty question, or a language slip just
-        drops the feature."""
-        if not self.clarify_enabled:
+        clarifying question the user can answer to refine the search. Sequential variant
+        (used when there was nothing to retrieve); the main path pre-computes the question
+        in parallel and gates it with `_should_clarify`."""
+        if not self.clarify_enabled or not self._should_clarify(results):
             return None
-        if results:
-            best = results[0]
-            if best.metadata.get("source") == "gpt-knowledge":
-                grounded = next(
-                    (r for r in results[1:] if r.metadata.get("source") != "gpt-knowledge"),
-                    None,
-                )
-                if grounded is not None and _same_title(best.title, grounded.title):
-                    return None  # catalog agrees with the AI's answer — settled
-            elif best.confidence >= self.clarify_floor:
-                return None  # confident grounded match
+        return self._clarify_question(category, query, [r.title for r in results[:5]])
+
+    def _should_clarify(self, results: list[ResultItem]) -> bool:
+        """Whether the answer is still unsettled enough to warrant one question. Certainty
+        means either a grounded top result at/above `clarify_floor`, or a free-form hero the
+        catalog CORROBORATES (its best grounded alternative names the same title) — an
+        uncorroborated world-knowledge guess is exactly when one more detail helps."""
+        if not results:
+            return True
+        best = results[0]
+        if best.metadata.get("source") == "gpt-knowledge":
+            grounded = next(
+                (r for r in results[1:] if r.metadata.get("source") != "gpt-knowledge"),
+                None,
+            )
+            # Settled only when a grounded row corroborates the AI's title.
+            return not (grounded is not None and _same_title(best.title, grounded.title))
+        return best.confidence < self.clarify_floor
+
+    def _clarify_question(self, category, query: str, titles: list[str]) -> str | None:
+        """The LLM half of clarify: write ONE question given the candidate titles. Best-
+        effort — any LLM failure, an empty question, or a language slip drops the feature."""
         try:
             system = clarify.SYSTEM_PROMPT.format(category=category.display_name)
-            user = clarify.build_user_prompt(
-                category.display_name, query, [r.title for r in results[:5]]
-            )
+            user = clarify.build_user_prompt(category.display_name, query, titles)
             question = parse_clarification(self.llm.complete_json(system, user)).question.strip()
         except (LLMError, ClarifyParseError) as exc:
             log.warning("pipeline.clarify_failed", error=str(exc))
@@ -321,17 +365,30 @@ class SearchPipeline:
         return question
 
     def _maybe_add_freeform(
-        self, db: Session, category, query: str, results: list[ResultItem], max_results: int
+        self,
+        db: Session,
+        category,
+        query: str,
+        results: list[ResultItem],
+        max_results: int,
+        precomputed_ident=_UNSET,
     ) -> list[ResultItem]:
         """When the grounded catalog gives no confident match, ask the LLM to name the
         real item from its own knowledge and promote that answer to the top. The weak
-        catalog matches are kept below as alternatives."""
+        catalog matches are kept below as alternatives. `precomputed_ident` lets the main
+        path reuse an identification already computed in parallel; when unset we call the
+        LLM lazily here (only after the confidence gate, so a strong match spends nothing)."""
         if not self.freeform_enabled:
             return results
         top = max((r.confidence for r in results), default=0.0)
         if top >= self.freeform_confidence_floor + self.freeform_grey_margin:
             return results  # confident grounded match — trust the catalog, skip the LLM
-        item = self._identify_freeform(db, category, query)
+        ident = (
+            self._identify_llm(category, query)
+            if precomputed_ident is _UNSET
+            else precomputed_ident
+        )
+        item = self._build_freeform_item(db, category, query, ident)
         if item is None:
             return results
         # If the AI names a title the catalog ALREADY retrieved, never show both — that
@@ -362,21 +419,32 @@ class SearchPipeline:
         agreed.confidence_note = agreed.confidence_note or item.confidence_note
         return [agreed, *(r for i, r in enumerate(results) if i != idx)]
 
-    def _identify_freeform(self, db: Session, category, query: str) -> ResultItem | None:
-        """Ungrounded identification: the LLM names the most likely real title. The
-        answer is materialized as a lightweight catalog row (no embedding, so it stays
-        out of retrieval) which gives it a real item_id — the UI can then save it to a
-        collection and vote on it like any grounded result. Returns None on any failure
-        or when the model can't identify anything."""
+    def _identify_llm(self, category, query: str):
+        """The network-only half of free-form identification: ask the LLM to name the most
+        likely real title and parse it. NO database or image I/O here, so it is safe to run
+        on a worker thread. Returns the parsed identification, or None on any failure."""
         try:
             system = identify.SYSTEM_PROMPT.format(category=category.display_name)
             user = identify.build_user_prompt(category.display_name, query)
             # Songs need the stronger model to resolve a lyric to the right song; other
             # categories stay on the fast default so latency isn't paid everywhere.
             model = self.song_identify_model if category.key in _SONG_KEYS else None
-            ident = parse_identification(self.llm.complete_json(system, user, model=model))
+            return parse_identification(self.llm.complete_json(system, user, model=model))
         except (LLMError, IdentifyParseError) as exc:
             log.warning("pipeline.identify_failed", error=str(exc))
+            return None
+
+    def _identify_freeform(self, db: Session, category, query: str) -> ResultItem | None:
+        """Ungrounded identification (LLM name → materialized catalog row). Thin wrapper
+        kept for direct callers/tests: identify then build."""
+        return self._build_freeform_item(db, category, query, self._identify_llm(category, query))
+
+    def _build_freeform_item(self, db: Session, category, query: str, ident) -> ResultItem | None:
+        """Turn a parsed identification into a saveable result: fetch cover art, materialize
+        a lightweight catalog row (no embedding, so it stays out of retrieval) for a real
+        item_id the UI can save/vote on, and build the ResultItem. Runs on the main thread
+        (it writes to the DB). Returns None when there's nothing to identify."""
+        if ident is None:
             return None
         title = ident.title.strip()
         if not title:

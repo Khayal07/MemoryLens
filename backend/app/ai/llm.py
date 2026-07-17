@@ -124,7 +124,3 @@ class LLMClient:
             raise LLMError(f"{provider.name} request failed: {exc}") from exc
         except (KeyError, IndexError) as exc:
             raise LLMError(f"Unexpected {provider.name} response shape: {exc}") from exc
-
-
-# Backwards-compatible alias
-OpenRouterClient = LLMClient

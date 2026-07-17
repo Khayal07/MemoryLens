@@ -39,11 +39,3 @@ def get_current_user(
     if user is None:
         raise UnauthorizedError("Authentication required.")
     return user
-
-
-def get_optional_user(
-    creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
-    db: Session = Depends(get_db),
-) -> User | None:
-    """Search works anonymously; if a valid token is present we attribute history."""
-    return _user_from_credentials(creds, db)

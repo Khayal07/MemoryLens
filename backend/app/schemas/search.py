@@ -10,6 +10,9 @@ from pydantic import BaseModel, Field
 class SearchRequest(BaseModel):
     category: str
     query: str = Field(min_length=3, max_length=1000)
+    # The UI's active language: answers (reason/description/clarify) come back in it.
+    # "az" | "en"; anything else (or omitted) ⇒ auto-detect from the memory.
+    language: str | None = None
 
 
 class ResultItem(BaseModel):

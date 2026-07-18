@@ -16,6 +16,13 @@ Respond with ONLY a JSON object of this exact shape:
 {{"question": "<the one clarifying question, or empty string if nothing useful to ask>"}}"""
 
 
-def build_user_prompt(category_display: str, query: str, candidate_titles: list[str]) -> str:
+def build_user_prompt(
+    category_display: str, query: str, candidate_titles: list[str], language: str | None = None
+) -> str:
+    from app.ai.prompts.language import language_directive
+
     titles = "; ".join(candidate_titles) if candidate_titles else "none"
-    return f"CATEGORY: {category_display}\nMEMORY: {query}\nWEAK CANDIDATES: {titles}"
+    return (
+        f"CATEGORY: {category_display}\nMEMORY: {query}\nWEAK CANDIDATES: {titles}"
+        f"{language_directive(language)}"
+    )

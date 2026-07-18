@@ -8,6 +8,7 @@ import {
 } from "framer-motion";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { categoryName, useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 import useMediaQuery from "../lib/useMediaQuery";
 
@@ -15,7 +16,6 @@ import useMediaQuery from "../lib/useMediaQuery";
  *  with a sticky viewport; scroll progress drives the animation, so the story plays
  *  at the reader's pace. Reduced motion → everything renders settled. */
 
-const SENTENCE = "twelve angry people arguing in one room over a verdict…";
 const FINAL_CONFIDENCE = 87;
 
 const FALLBACK_CATEGORIES = [
@@ -29,6 +29,7 @@ const FALLBACK_CATEGORIES = [
 
 /** Scene 1 — a giant aperture ring draws itself and irises open onto the title. */
 function ApertureScene({ reduce, coarse }: { reduce: boolean; coarse: boolean }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   // Partial rings at rest so the first paint already reads as an aperture.
@@ -90,10 +91,10 @@ function ApertureScene({ reduce, coarse }: { reduce: boolean; coarse: boolean })
             MemoryLens
           </p>
           <h1 className="font-display text-[clamp(2.8rem,8vw,5.2rem)] font-bold leading-[1.02] tracking-[-0.035em]">
-            You almost have it.
+            {t("category.title1")}
             <br />
             <span className="bg-gradient-to-r from-violet-soft via-violet to-amber bg-clip-text text-transparent">
-              Bring it into focus.
+              {t("category.title2")}
             </span>
           </h1>
         </m.div>
@@ -103,7 +104,7 @@ function ApertureScene({ reduce, coarse }: { reduce: boolean; coarse: boolean })
             style={{ opacity: hintOpacity }}
             className="absolute bottom-10 text-[0.9rem] tracking-[0.12em] text-faint"
           >
-            scroll to focus ↓
+            {t("landing.scrollHint")}
           </m.p>
         )}
       </div>
@@ -113,6 +114,8 @@ function ApertureScene({ reduce, coarse }: { reduce: boolean; coarse: boolean })
 
 /** Scene 2 — a fuzzy memory types itself while the blurred answer develops sharp. */
 function RecallScene({ reduce }: { reduce: boolean }) {
+  const { t } = useI18n();
+  const SENTENCE = t("landing.sentence");
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
   const [chars, setChars] = useState(reduce ? SENTENCE.length : 0);
@@ -154,7 +157,7 @@ function RecallScene({ reduce }: { reduce: boolean }) {
       >
         <div className="glass-strong w-full max-w-[640px] rounded-2xl p-5">
           <p className="mb-2 text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-faint">
-            You type what you remember
+            {t("landing.youType")}
           </p>
           <p className="min-h-[3.2rem] text-[1.25rem] leading-relaxed text-ink" aria-label={SENTENCE}>
             {SENTENCE.slice(0, chars)}
@@ -191,14 +194,12 @@ function RecallScene({ reduce }: { reduce: boolean }) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-faint">
-              …and it finds the real thing
+              {t("landing.findsReal")}
             </p>
             <h2 className="mt-1 font-display text-[1.7rem] font-bold tracking-[-0.02em]">
               12 Angry Men
             </h2>
-            <p className="mt-1 text-[0.92rem] text-muted">
-              A jury of twelve locked in one sweltering room, one holdout voting not guilty.
-            </p>
+            <p className="mt-1 text-[0.92rem] text-muted">{t("landing.movieDesc")}</p>
           </div>
           <div className="shrink-0 text-center">
             <span
@@ -208,7 +209,7 @@ function RecallScene({ reduce }: { reduce: boolean }) {
               {conf}%
             </span>
             <p className="text-[0.66rem] tracking-[0.04em] text-faint">
-              {conf >= 75 ? "in focus" : "focusing…"}
+              {conf >= 75 ? t("confidence.inFocus") : t("confidence.focusingLower")}
             </p>
           </div>
         </m.div>
@@ -219,16 +220,17 @@ function RecallScene({ reduce }: { reduce: boolean }) {
 
 /** Scene 3 — the six category chips orbit in from around the lens. */
 function CategoriesScene() {
+  const { t } = useI18n();
   const { data } = useQuery({ queryKey: ["categories"], queryFn: api.categories });
   const categories = data?.length ? data : FALLBACK_CATEGORIES;
 
   return (
     <section className="mx-auto max-w-[760px] px-6 py-28 text-center">
       <h2 className="font-display text-[clamp(1.8rem,4.5vw,2.6rem)] font-bold tracking-[-0.03em]">
-        Six shelves of half-memories.
+        {t("landing.s3.title")}
       </h2>
       <p className="mx-auto mt-3 max-w-[480px] text-[1.05rem] text-muted">
-        Real catalogs — no invented answers. Pick a shelf and describe the fragment.
+        {t("landing.s3.subtitle")}
       </p>
       <div className="mt-10 flex flex-wrap justify-center gap-3.5">
         {categories.map((c, i) => {
@@ -252,7 +254,7 @@ function CategoriesScene() {
                   font-semibold transition-colors hover:border-violet/60 hover:shadow-glow"
               >
                 <span aria-hidden="true" className="text-[1.25rem]">{c.icon}</span>
-                {c.display_name}
+                {categoryName(t, c.key, c.display_name)}
               </Link>
             </m.div>
           );
@@ -264,6 +266,7 @@ function CategoriesScene() {
 
 /** Scene 4 — the call to action. */
 function CtaScene() {
+  const { t } = useI18n();
   return (
     <section className="px-6 pb-32 pt-10 text-center">
       <m.div
@@ -274,11 +277,10 @@ function CtaScene() {
         className="glass-strong mx-auto max-w-[640px] rounded-3xl p-10 ring-1 ring-violet/30 shadow-glow"
       >
         <h2 className="font-display text-[clamp(1.9rem,5vw,2.8rem)] font-bold tracking-[-0.03em]">
-          That thing on the tip of your tongue?
+          {t("landing.s4.title")}
         </h2>
         <p className="mx-auto mt-3 max-w-[440px] text-[1.05rem] text-muted">
-          Create an account to keep every find — history, collections, your memory
-          constellation, and a daily guessing challenge.
+          {t("landing.s4.subtitle")}
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
@@ -286,14 +288,14 @@ function CtaScene() {
             className="rounded-full bg-violet px-7 py-3.5 text-[1.02rem] font-semibold text-white
               shadow-glow transition-transform hover:scale-[1.03]"
           >
-            Create account
+            {t("nav.createAccount")}
           </Link>
           <Link
             to="/login"
             className="glass rounded-full px-7 py-3.5 text-[1.02rem] font-semibold
               transition-colors hover:border-violet/60"
           >
-            Sign in ↗
+            {t("landing.s4.signIn")}
           </Link>
         </div>
       </m.div>

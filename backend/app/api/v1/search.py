@@ -38,7 +38,9 @@ def search(
     user: User = Depends(get_current_user),
 ) -> SearchResponse:
     try:
-        return search_service.run_search(db, body.category, body.query, user.id)
+        return search_service.run_search(
+            db, body.category, body.query, user.id, body.language
+        )
     except QueryError as exc:
         raise ValidationError(str(exc)) from exc
 

@@ -3,6 +3,7 @@ import { m } from "framer-motion";
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import type { SearchSummary } from "../lib/types";
+import { useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 import PosterPlaceholder from "./PosterPlaceholder";
 
@@ -22,6 +23,7 @@ function dayLabel(iso: string): string {
  *  one glass card per search with its best-match poster, day markers where the
  *  date changes, cards revealing as they scroll into the lane. */
 export default function MemoryLane({ items }: Props) {
+  const { t } = useI18n();
   const laneRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: api.categories });
@@ -33,7 +35,7 @@ export default function MemoryLane({ items }: Props) {
       className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-5 pt-1
         [scrollbar-color:rgba(124,107,245,0.35)_transparent] [scrollbar-width:thin]"
       role="list"
-      aria-label="Search timeline"
+      aria-label={t("history.timelineAria")}
     >
       {items.map((h, i) => {
         const newDay = i === 0 || dayLabel(items[i - 1].created_at) !== dayLabel(h.created_at);
@@ -58,7 +60,10 @@ export default function MemoryLane({ items }: Props) {
               whileHover={{ y: -4 }}
               transition={{ duration: 0.45, ease: [0.2, 0.7, 0.2, 1] }}
               className="glass w-[200px] rounded-lens p-3 text-left transition-colors hover:border-violet/50"
-              aria-label={`${h.query} — best match ${h.top_title ?? "unknown"}`}
+              aria-label={t("history.bestAria", {
+                query: h.query,
+                title: h.top_title ?? t("history.unknown"),
+              })}
             >
               <div className="relative overflow-hidden rounded-[10px]">
                 {h.top_image ? (

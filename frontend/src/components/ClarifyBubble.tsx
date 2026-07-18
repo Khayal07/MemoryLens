@@ -1,5 +1,6 @@
 import { m } from "framer-motion";
 import { useState } from "react";
+import { useI18n } from "../i18n/LanguageContext";
 
 /** Akinator mode: when the search comes back weak, the AI's single clarifying
  *  question rises from the console as an amber glass bubble with an inline answer
@@ -13,6 +14,7 @@ export default function ClarifyBubble({
   onAnswer: (answer: string) => void;
   disabled?: boolean;
 }) {
+  const { t } = useI18n();
   const [answer, setAnswer] = useState("");
 
   function submit() {
@@ -40,7 +42,7 @@ export default function ClarifyBubble({
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-amber">
-            One more detail
+            {t("clarify.oneMore")}
           </p>
           <p className="mt-1 text-[1.02rem] leading-snug text-ink">{question}</p>
           <form
@@ -54,8 +56,8 @@ export default function ClarifyBubble({
               autoFocus
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Your answer…"
-              aria-label="Answer the clarifying question"
+              placeholder={t("clarify.answerPlaceholder")}
+              aria-label={t("clarify.answerAria")}
               className="min-w-0 flex-1 rounded-xl border border-glass-line bg-transparent px-3 py-2
                 text-[0.95rem] text-ink outline-none transition-shadow placeholder:text-faint
                 focus:ring-2 focus:ring-amber/40"
@@ -67,7 +69,7 @@ export default function ClarifyBubble({
                 font-semibold text-amber transition-all hover:bg-amber/25
                 disabled:cursor-not-allowed disabled:opacity-45"
             >
-              Refine ↺
+              {t("clarify.refine")}
             </button>
           </form>
         </div>

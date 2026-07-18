@@ -15,6 +15,7 @@ import EmptyState from "../components/ui/EmptyState";
 import Eyebrow from "../components/ui/Eyebrow";
 import Skeleton from "../components/ui/Skeleton";
 import { developIn, stagger } from "../components/motion/variants";
+import { useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 import type { ConstellationNode } from "../lib/types";
 
@@ -41,6 +42,7 @@ type SimLink = SimulationLinkDatum<SimNode> & { weight: number };
  *  glowing category-coloured nodes sized by how often they surfaced, linked by
  *  embedding similarity. Free-form (AI-named) finds float unlinked on purpose. */
 export default function Constellation() {
+  const { t } = useI18n();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["constellation"],
     queryFn: api.constellation,
@@ -143,27 +145,25 @@ export default function Constellation() {
     <div>
       <m.section variants={stagger(0.08)} initial="hidden" animate="show" className="mb-6">
         <m.div variants={developIn}>
-          <Eyebrow>Your sky</Eyebrow>
+          <Eyebrow>{t("constellation.eyebrow")}</Eyebrow>
         </m.div>
         <m.h1
           variants={developIn}
           className="mt-2 font-display text-[2rem] font-bold tracking-[-0.02em]"
         >
-          Memory Constellation
+          {t("constellation.title")}
         </m.h1>
         <m.p variants={developIn} className="mt-2 max-w-[520px] text-[0.92rem] text-muted">
-          Every find becomes a star — colour is its category, size how often it surfaced,
-          lines link memories that feel alike. Lone stars are AI-named finds outside the
-          catalog.
+          {t("constellation.subtitle")}
         </m.p>
       </m.section>
 
       {isLoading && <Skeleton className="h-[480px]" />}
-      {isError && <EmptyState title="Couldn't chart your constellation." />}
+      {isError && <EmptyState title={t("constellation.loadError")} />}
       {data && data.nodes.length === 0 && (
         <EmptyState
-          title="No stars yet."
-          hint="Search for a few memories and they'll appear here."
+          title={t("constellation.emptyTitle")}
+          hint={t("constellation.emptyHint")}
         />
       )}
 
@@ -174,7 +174,7 @@ export default function Constellation() {
             viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
             className={`block h-auto w-full touch-none ${dragRef.current ? "cursor-grabbing" : "cursor-grab"}`}
             role="img"
-            aria-label="Star map of your found items"
+            aria-label={t("constellation.mapAria")}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
               dragRef.current = { px: e.clientX, py: e.clientY };
@@ -258,7 +258,7 @@ export default function Constellation() {
               <div className="min-w-0">
                 <div className="truncate text-[0.9rem] font-semibold">{hovered.data.title}</div>
                 <div className="mt-0.5 font-mono text-[0.7rem] text-faint">
-                  {hovered.data.category} · seen ×{hovered.data.seen_count}
+                  {hovered.data.category} · {t("constellation.seen", { n: hovered.data.seen_count })}
                 </div>
               </div>
             </div>
@@ -266,9 +266,9 @@ export default function Constellation() {
 
           <div className="absolute right-3 top-3 flex flex-col gap-1.5">
             {[
-              { label: "Zoom in", glyph: "＋", action: () => zoomBy(1 / 1.3) },
-              { label: "Zoom out", glyph: "−", action: () => zoomBy(1.3) },
-              { label: "Reset view", glyph: "⌂", action: () => setView({ x: 0, y: 0, w: W, h: H }) },
+              { label: t("constellation.zoomIn"), glyph: "＋", action: () => zoomBy(1 / 1.3) },
+              { label: t("constellation.zoomOut"), glyph: "−", action: () => zoomBy(1.3) },
+              { label: t("constellation.reset"), glyph: "⌂", action: () => setView({ x: 0, y: 0, w: W, h: H }) },
             ].map((b) => (
               <button
                 key={b.label}

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { m } from "framer-motion";
 import type { SimilarItem } from "../lib/types";
+import { useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 import { fadeUp, stagger } from "./motion/variants";
 import TiltCard from "./motion/TiltCard";
@@ -16,6 +17,7 @@ interface Props {
 /** "More like this" — catalog neighbours of the best grounded match. Rendered only
  *  for real catalog items (item_id > 0); free-form answers have no neighbours. */
 export default function SimilarItems({ itemId, icon }: Props) {
+  const { t } = useI18n();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["similar", itemId],
     queryFn: () => api.similar(itemId),
@@ -27,7 +29,7 @@ export default function SimilarItems({ itemId, icon }: Props) {
   return (
     <section className="mt-8">
       <div className="mb-4">
-        <Eyebrow>More like this</Eyebrow>
+        <Eyebrow>{t("similar.moreLikeThis")}</Eyebrow>
       </div>
 
       {isLoading ? (

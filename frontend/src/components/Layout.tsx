@@ -2,6 +2,7 @@ import { AnimatePresence, m } from "framer-motion";
 import { Suspense, useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../features/auth/AuthContext";
+import { useI18n } from "../i18n/LanguageContext";
 import AuroraBackground from "./AuroraBackground";
 import PageTransition from "./motion/PageTransition";
 import Spinner from "./ui/Spinner";
@@ -11,8 +12,36 @@ const navLink =
   "rounded-[10px] px-3 py-2 text-[0.92rem] font-medium text-muted transition-colors " +
   "hover:bg-raised hover:text-ink focus-visible:outline-2 focus-visible:outline-violet-soft";
 
+/** AZ ⇄ EN segmented toggle. */
+function LangToggle() {
+  const { lang, setLang, t } = useI18n();
+  return (
+    <div
+      role="group"
+      aria-label={t("lang.aria")}
+      className="glass ml-1 flex items-center rounded-full p-0.5 text-[0.72rem] font-semibold"
+    >
+      {(["az", "en"] as const).map((code) => (
+        <button
+          key={code}
+          type="button"
+          onClick={() => setLang(code)}
+          aria-pressed={lang === code}
+          className={
+            "rounded-full px-2.5 py-1 transition-colors " +
+            (lang === code ? "bg-violet/25 text-ink" : "text-muted hover:text-ink")
+          }
+        >
+          {t(`lang.${code}`)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function Layout() {
   const { isAuthenticated, signOut } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,19 +52,19 @@ export default function Layout() {
     return isAuthenticated ? (
       <>
         <Link to="/collections" className={navLink} onClick={close}>
-          Collections
+          {t("nav.collections")}
         </Link>
         <Link to="/history" className={navLink} onClick={close}>
-          History
+          {t("nav.history")}
         </Link>
         <Link to="/analytics" className={navLink} onClick={close}>
-          Analytics
+          {t("nav.analytics")}
         </Link>
         <Link to="/constellation" className={navLink} onClick={close}>
-          Constellation
+          {t("nav.constellation")}
         </Link>
         <Link to="/challenge" className={navLink} onClick={close}>
-          Daily
+          {t("nav.daily")}
         </Link>
         <button
           className={navLink + " text-left"}
@@ -45,17 +74,19 @@ export default function Layout() {
             navigate("/");
           }}
         >
-          Sign out
+          {t("nav.signOut")}
         </button>
+        <LangToggle />
       </>
     ) : (
       <>
         <Link to="/login" className={navLink} onClick={close}>
-          Sign in
+          {t("nav.signIn")}
         </Link>
         <Link to="/register" className={navLink} onClick={close}>
-          Create account
+          {t("nav.createAccount")}
         </Link>
+        <LangToggle />
       </>
     );
   }
@@ -68,7 +99,7 @@ export default function Layout() {
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50
           focus:rounded-lg focus:bg-raised focus:px-4 focus:py-2 focus:text-ink"
       >
-        Skip to content
+        {t("nav.skip")}
       </a>
 
       <header className="sticky top-0 z-20 border-b border-glass-line bg-night/85 md:bg-night/40 md:backdrop-blur-xl md:backdrop-saturate-150">
@@ -76,7 +107,7 @@ export default function Layout() {
           <Link
             to="/"
             className="flex items-center gap-2.5 font-display text-[1.1rem] font-bold tracking-[-0.02em]"
-            aria-label="MemoryLens home"
+            aria-label={t("nav.home")}
           >
             <m.span
               aria-hidden="true"
@@ -98,7 +129,7 @@ export default function Layout() {
               focus-visible:outline-2 focus-visible:outline-violet-soft md:hidden"
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
-            aria-label="Menu"
+            aria-label={t("nav.menu")}
             onClick={() => setMenuOpen((o) => !o)}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">

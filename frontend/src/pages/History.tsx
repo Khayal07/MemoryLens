@@ -8,11 +8,13 @@ import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import { developIn, fadeUp, stagger } from "../components/motion/variants";
 import { cn } from "../lib/cn";
+import { useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 
 export default function History() {
   const { data, isLoading, isError } = useQuery({ queryKey: ["history"], queryFn: api.history });
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [view, setView] = useState<"lane" | "list">("lane");
 
   return (
@@ -26,23 +28,23 @@ export default function History() {
         className="glass mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[0.85rem]
           font-medium text-muted transition-colors hover:border-violet/40 hover:text-ink
           focus-visible:outline-2 focus-visible:outline-violet-soft"
-        aria-label="Go back"
+        aria-label={t("common.back")}
       >
-        <span aria-hidden="true">←</span> Back
+        <span aria-hidden="true">←</span> {t("common.back")}
       </m.button>
 
       <m.section variants={stagger(0.08)} initial="hidden" animate="show" className="mb-7">
         <m.div variants={developIn}>
-          <Eyebrow>Your searches</Eyebrow>
+          <Eyebrow>{t("history.eyebrow")}</Eyebrow>
         </m.div>
         <m.h1
           variants={developIn}
           className="mt-2 font-display text-[2rem] font-bold tracking-[-0.02em]"
         >
-          What you've looked for
+          {t("history.title")}
         </m.h1>
 
-        <m.div variants={developIn} className="mt-4 flex gap-1.5" role="tablist" aria-label="History view">
+        <m.div variants={developIn} className="mt-4 flex gap-1.5" role="tablist" aria-label={t("history.viewAria")}>
           {(["lane", "list"] as const).map((v) => (
             <button
               key={v}
@@ -57,7 +59,7 @@ export default function History() {
                   : "text-muted hover:text-ink",
               )}
             >
-              {v === "lane" ? "◧ Memory Lane" : "☰ List"}
+              {v === "lane" ? t("history.lane") : t("history.list")}
             </button>
           ))}
         </m.div>
@@ -71,14 +73,14 @@ export default function History() {
         </div>
       )}
 
-      {isError && <EmptyState title="Couldn't load your history." />}
+      {isError && <EmptyState title={t("history.loadError")} />}
 
       {data && data.length === 0 && (
         <EmptyState
-          title="No searches yet."
+          title={t("history.emptyTitle")}
           action={
             <Link to="/" className="text-[0.9rem] text-violet-soft hover:underline">
-              Start recalling →
+              {t("common.startRecalling")}
             </Link>
           }
         />
@@ -106,7 +108,7 @@ export default function History() {
                   {h.category} · {new Date(h.created_at).toLocaleDateString()}
                 </div>
               </div>
-              <span className="font-mono text-[0.74rem] text-faint">{h.result_count} results</span>
+              <span className="font-mono text-[0.74rem] text-faint">{t("history.results", { count: h.result_count })}</span>
             </m.div>
           ))}
         </m.div>

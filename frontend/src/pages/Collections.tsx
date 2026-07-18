@@ -8,12 +8,14 @@ import Skeleton from "../components/ui/Skeleton";
 import { developIn, fadeUp, stagger } from "../components/motion/variants";
 import TiltCard from "../components/motion/TiltCard";
 import PosterPlaceholder from "../components/PosterPlaceholder";
+import { useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 import type { Collection, SavedItem } from "../lib/types";
 
 export default function Collections() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const { data, isLoading, isError } = useQuery({
     queryKey: ["collections"],
@@ -41,20 +43,20 @@ export default function Collections() {
         className="glass mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[0.85rem]
           font-medium text-muted transition-colors hover:border-violet/40 hover:text-ink
           focus-visible:outline-2 focus-visible:outline-violet-soft"
-        aria-label="Go back"
+        aria-label={t("common.back")}
       >
-        <span aria-hidden="true">←</span> Back
+        <span aria-hidden="true">←</span> {t("common.back")}
       </m.button>
 
       <m.section variants={stagger(0.08)} initial="hidden" animate="show" className="mb-7">
         <m.div variants={developIn}>
-          <Eyebrow>Saved</Eyebrow>
+          <Eyebrow>{t("collections.eyebrow")}</Eyebrow>
         </m.div>
         <m.h1
           variants={developIn}
           className="mt-2 font-display text-[2rem] font-bold tracking-[-0.02em]"
         >
-          Your collections
+          {t("collections.title")}
         </m.h1>
       </m.section>
 
@@ -69,7 +71,7 @@ export default function Collections() {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Create a new collection…"
+          placeholder={t("collections.createPlaceholder")}
           maxLength={80}
           className="min-w-0 flex-1 rounded-lg bg-transparent px-3 py-2.5 text-[0.98rem] text-ink
             placeholder:text-faint focus:outline-none"
@@ -80,7 +82,7 @@ export default function Collections() {
           className="rounded-lg bg-gradient-to-r from-violet-soft to-amber px-4 py-2.5 text-[0.9rem]
             font-semibold text-[#14122b] disabled:opacity-50"
         >
-          Create
+          {t("collections.create")}
         </button>
       </form>
 
@@ -92,15 +94,15 @@ export default function Collections() {
         </div>
       )}
 
-      {isError && <EmptyState title="Couldn't load your collections." />}
+      {isError && <EmptyState title={t("collections.loadError")} />}
 
       {data && data.length === 0 && (
         <EmptyState
-          title="No collections yet."
-          hint="Search, then tap ✦ on a result to save it here."
+          title={t("collections.emptyTitle")}
+          hint={t("collections.emptyHint")}
           action={
             <Link to="/" className="text-[0.9rem] text-violet-soft hover:underline">
-              Start recalling →
+              {t("common.startRecalling")}
             </Link>
           }
         />
@@ -122,6 +124,7 @@ function CollectionSection({
   collection: Collection;
   onChange: () => void;
 }) {
+  const { t } = useI18n();
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(collection.name);
 
@@ -162,7 +165,7 @@ function CollectionSection({
                 text-[1rem] text-ink focus:border-violet focus:outline-none"
             />
             <button type="submit" className="text-[0.85rem] text-violet-soft hover:underline">
-              Save
+              {t("common.save")}
             </button>
             <button
               type="button"
@@ -172,7 +175,7 @@ function CollectionSection({
               }}
               className="text-[0.85rem] text-faint hover:text-muted"
             >
-              Cancel
+              {t("common.cancel")}
             </button>
           </form>
         ) : (
@@ -187,13 +190,13 @@ function CollectionSection({
         {!renaming && (
           <div className="flex shrink-0 gap-3 text-[0.82rem]">
             <button onClick={() => setRenaming(true)} className="text-muted hover:text-ink">
-              Rename
+              {t("collections.rename")}
             </button>
             <button
               onClick={() => remove.mutate()}
               className="text-muted hover:text-red-300"
             >
-              Delete
+              {t("collections.delete")}
             </button>
           </div>
         )}
@@ -201,7 +204,7 @@ function CollectionSection({
 
       {collection.items.length === 0 ? (
         <p className="glass rounded-xl px-4 py-6 text-center text-[0.88rem] text-faint">
-          Empty — save results here with ✦.
+          {t("collections.empty")}
         </p>
       ) : (
         <m.div
@@ -224,12 +227,13 @@ function CollectionSection({
 }
 
 function SavedCard({ item, onRemove }: { item: SavedItem; onRemove: () => void }) {
+  const { t } = useI18n();
   return (
     <div className="glass relative flex h-full items-center gap-3 rounded-lens p-3">
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Remove ${item.title}`}
+        aria-label={t("collections.removeAria", { title: item.title })}
         className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full
           bg-night/60 text-[0.8rem] text-faint transition-colors hover:text-red-300"
       >

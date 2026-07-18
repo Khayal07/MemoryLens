@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAuth } from "../features/auth/AuthContext";
+import { useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
  *  clipboard. Only shown to the signed-in owner — sharing requires auth. */
 export default function ShareButton({ searchId }: Props) {
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
 
   const share = useMutation({
@@ -22,7 +24,7 @@ export default function ShareButton({ searchId }: Props) {
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
       } catch {
-        window.prompt("Copy this share link:", url);
+        window.prompt(t("share.prompt"), url);
       }
     },
   });
@@ -39,7 +41,7 @@ export default function ShareButton({ searchId }: Props) {
         focus-visible:outline-2 focus-visible:outline-violet-soft disabled:opacity-50"
     >
       <span aria-hidden="true">↗</span>
-      {copied ? "Link copied!" : share.isPending ? "Creating…" : "Share"}
+      {copied ? t("share.copied") : share.isPending ? t("share.creating") : t("share.share")}
     </button>
   );
 }

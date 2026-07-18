@@ -1,4 +1,5 @@
 import { m, AnimatePresence } from "framer-motion";
+import { useI18n } from "../i18n/LanguageContext";
 import { cn } from "../lib/cn";
 
 interface Props {
@@ -37,6 +38,7 @@ export default function FragmentBoard({
   isPending,
   placeholder,
 }: Props) {
+  const { t } = useI18n();
   function addDraft() {
     const f = draft.trim();
     if (!f) return;
@@ -62,7 +64,7 @@ export default function FragmentBoard({
             <button
               type="button"
               onClick={() => onChange(fragments.filter((x) => x !== f))}
-              aria-label={`Remove fragment: ${f}`}
+              aria-label={t("fragment.removeAria", { f })}
               className="flex h-5 w-5 items-center justify-center rounded-full text-faint transition-colors hover:bg-white/10 hover:text-ink"
             >
               ✕
@@ -85,8 +87,8 @@ export default function FragmentBoard({
           }
         }}
         onBlur={addDraft}
-        placeholder={fragments.length === 0 ? placeholder : "Add another fragment…"}
-        aria-label="Add a memory fragment"
+        placeholder={fragments.length === 0 ? placeholder : t("fragment.addAnother")}
+        aria-label={t("fragment.addAria")}
         className={cn(
           "min-w-[140px] flex-1 bg-transparent px-1 py-2 text-[1.05rem] leading-[1.45]",
           "text-ink outline-none placeholder:text-faint",

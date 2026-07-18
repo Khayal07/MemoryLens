@@ -14,15 +14,19 @@ from app.services import feedback_service
 
 
 def run_search(
-    db: Session, category_key: str, query: str, user_id: int | None
+    db: Session,
+    category_key: str,
+    query: str,
+    user_id: int | None,
+    language: str | None = None,
 ) -> SearchResponse:
     if category_key not in CATEGORY_KEYS:
         raise NotFoundError(f"Unknown category '{category_key}'.")
 
-    response = cache.get_cached(category_key, query)
+    response = cache.get_cached(category_key, query, language)
     if response is None:
-        response = get_pipeline().run(db, category_key, query)
-        cache.set_cached(category_key, query, response)
+        response = get_pipeline().run(db, category_key, query, language=language)
+        cache.set_cached(category_key, query, response, language)
 
     # Always record the search so history reflects every request, cached or not.
     response.search_id = _persist(db, category_key, query, user_id, response)

@@ -6,10 +6,12 @@ import Eyebrow from "../components/ui/Eyebrow";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import { developIn, stagger } from "../components/motion/variants";
+import { useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 
 export default function SharedResult() {
   const { token = "" } = useParams();
+  const { t } = useI18n();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["shared", token],
     queryFn: () => api.getShared(token),
@@ -28,11 +30,11 @@ export default function SharedResult() {
   if (isError || !data) {
     return (
       <EmptyState
-        title="This shared recall isn't available."
-        hint="The link may be wrong or the search was removed."
+        title={t("shared.unavailableTitle")}
+        hint={t("shared.unavailableHint")}
         action={
           <Link to="/" className="text-[0.9rem] text-violet-soft hover:underline">
-            Try MemoryLens →
+            {t("shared.tryLink")}
           </Link>
         }
       />
@@ -43,7 +45,7 @@ export default function SharedResult() {
     <div>
       <m.section variants={stagger(0.08)} initial="hidden" animate="show" className="mb-7">
         <m.div variants={developIn}>
-          <Eyebrow>Shared recall</Eyebrow>
+          <Eyebrow>{t("shared.eyebrow")}</Eyebrow>
         </m.div>
         <m.h1
           variants={developIn}
@@ -54,11 +56,11 @@ export default function SharedResult() {
       </m.section>
 
       {data.results.length === 0 ? (
-        <EmptyState title="No matches were found for this recall." />
+        <EmptyState title={t("shared.noMatches")} />
       ) : (
         <>
           <div className="mb-4">
-            <Eyebrow>Best match</Eyebrow>
+            <Eyebrow>{t("search.bestMatch")}</Eyebrow>
           </div>
           <m.div variants={stagger()} initial="hidden" animate="show">
             <ResultCard result={data.results[0]} best />
@@ -67,7 +69,7 @@ export default function SharedResult() {
           {data.results.length > 1 && (
             <>
               <div className="mb-4 mt-8">
-                <Eyebrow>Other possibilities</Eyebrow>
+                <Eyebrow>{t("search.otherPossibilities")}</Eyebrow>
               </div>
               <m.div
                 className="grid grid-cols-1 gap-3.5 sm:grid-cols-2"
@@ -90,7 +92,7 @@ export default function SharedResult() {
           className="glass inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[0.9rem]
             font-medium text-muted transition-colors hover:border-violet/40 hover:text-ink"
         >
-          Recall your own memory →
+          {t("shared.recallOwn")}
         </Link>
       </div>
     </div>

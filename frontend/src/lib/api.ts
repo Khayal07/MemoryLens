@@ -112,10 +112,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export const api = {
   categories: () => request<Category[]>("/categories"),
 
-  search: (category: string, query: string) =>
+  search: (category: string, query: string, language?: string) =>
     request<SearchResponse>("/search", {
       method: "POST",
-      body: JSON.stringify({ category, query }),
+      body: JSON.stringify({ category, query, language }),
     }),
 
   register: (email: string, password: string) =>

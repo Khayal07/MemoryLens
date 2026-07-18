@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, m } from "framer-motion";
 import { useState } from "react";
 import { useAuth } from "../features/auth/AuthContext";
+import { useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 import type { Collection } from "../lib/types";
 import { cn } from "../lib/cn";
@@ -15,6 +16,7 @@ interface Props {
  *  which have no catalog row to reference. */
 export default function SaveButton({ itemId }: Props) {
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
   if (!isAuthenticated || itemId <= 0) return null;
@@ -24,7 +26,7 @@ export default function SaveButton({ itemId }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Save to a collection"
+        aria-label={t("save.aria")}
         aria-expanded={open}
         className="glass flex size-9 items-center justify-center rounded-full text-[1rem]
           text-muted transition-colors hover:border-violet/50 hover:text-ink
@@ -47,6 +49,7 @@ export default function SaveButton({ itemId }: Props) {
 
 function Picker({ itemId, onClose }: { itemId: number; onClose: () => void }) {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const { data: collections, isLoading } = useQuery({
     queryKey: ["collections"],
@@ -82,11 +85,11 @@ function Picker({ itemId, onClose }: { itemId: number; onClose: () => void }) {
       onClick={(e) => e.stopPropagation()}
     >
       <div className="px-1 pb-1.5 text-[0.72rem] font-semibold uppercase tracking-wide text-faint">
-        Save to
+        {t("save.saveTo")}
       </div>
 
       {isLoading ? (
-        <div className="px-1 py-2 text-[0.85rem] text-muted">Loading…</div>
+        <div className="px-1 py-2 text-[0.85rem] text-muted">{t("common.loading")}</div>
       ) : (
         <div className="max-h-52 space-y-1 overflow-y-auto">
           {(collections ?? []).map((col) => {
@@ -110,7 +113,7 @@ function Picker({ itemId, onClose }: { itemId: number; onClose: () => void }) {
             );
           })}
           {collections?.length === 0 && (
-            <div className="px-2.5 py-1.5 text-[0.82rem] text-faint">No collections yet.</div>
+            <div className="px-2.5 py-1.5 text-[0.82rem] text-faint">{t("save.noCollections")}</div>
           )}
         </div>
       )}
@@ -126,7 +129,7 @@ function Picker({ itemId, onClose }: { itemId: number; onClose: () => void }) {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="New collection…"
+          placeholder={t("save.newCollection")}
           maxLength={80}
           className="min-w-0 flex-1 rounded-lg border border-glass-line bg-night/50 px-2.5 py-1.5
             text-[0.85rem] text-ink placeholder:text-faint focus:border-violet focus:outline-none"
@@ -137,7 +140,7 @@ function Picker({ itemId, onClose }: { itemId: number; onClose: () => void }) {
           className="rounded-lg bg-gradient-to-r from-violet-soft to-amber px-3 py-1.5 text-[0.85rem]
             font-semibold text-[#14122b] disabled:opacity-50"
         >
-          Add
+          {t("save.add")}
         </button>
       </form>
 
@@ -146,7 +149,7 @@ function Picker({ itemId, onClose }: { itemId: number; onClose: () => void }) {
         onClick={onClose}
         className="mt-2 w-full rounded-lg px-2.5 py-1.5 text-[0.78rem] text-faint hover:text-muted"
       >
-        Done
+        {t("common.done")}
       </button>
     </m.div>
   );

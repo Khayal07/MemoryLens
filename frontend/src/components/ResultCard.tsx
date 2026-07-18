@@ -1,6 +1,7 @@
 import { AnimatePresence, m } from "framer-motion";
 import { useState } from "react";
 import type { ResultItem } from "../lib/types";
+import { useI18n } from "../i18n/LanguageContext";
 import { cn } from "../lib/cn";
 import { apertureBloom, developIn, photoDevelop, photoDevelopSoft } from "./motion/variants";
 import TiltCard from "./motion/TiltCard";
@@ -23,6 +24,7 @@ interface Props {
 const HIDDEN_META = new Set(["source", "image_url", "source_url"]);
 
 export default function ResultCard({ result, best, icon, searchId }: Props) {
+  const { t } = useI18n();
   const [imageFailed, setImageFailed] = useState(false);
   // The darkroom develop only starts once the poster has actually loaded, so the
   // blur→sharp reveal never plays over an empty frame.
@@ -90,7 +92,7 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
       <div className="min-w-0">
         {byAI && (
           <Badge tone="amber" className="mb-3">
-            ✦ AI knowledge
+            {t("result.aiKnowledge")}
           </Badge>
         )}
 
@@ -101,12 +103,12 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
                 type="button"
                 onClick={() => setShowBreakdown((v) => !v)}
                 aria-expanded={showBreakdown}
-                aria-label="Why this confidence? Toggle the signal breakdown"
+                aria-label={t("result.whyAria")}
                 className="group rounded-full text-left outline-none focus-visible:ring-2 focus-visible:ring-violet/60"
               >
                 <ConfidenceDial value={result.confidence} />
                 <span className="mt-1 block text-center text-[0.68rem] text-faint transition-colors group-hover:text-muted">
-                  why? {showBreakdown ? "▴" : "▾"}
+                  {t("result.why")} {showBreakdown ? "▴" : "▾"}
                 </span>
               </button>
               <AnimatePresence>
@@ -170,7 +172,7 @@ export default function ResultCard({ result, best, icon, searchId }: Props) {
             target="_blank"
             rel="noreferrer"
           >
-            View source ↗
+            {t("common.viewSource")}
           </a>
         )}
 

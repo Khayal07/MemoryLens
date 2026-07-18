@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../features/auth/AuthContext";
+import { useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
 import { cn } from "../lib/cn";
 
@@ -12,6 +13,7 @@ interface Props {
  *  Hidden for anonymous users and free-form answers (no catalog item to score). */
 export default function FeedbackButtons({ searchId, itemId }: Props) {
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const [vote, setVote] = useState<1 | -1 | null>(null);
 
   if (!isAuthenticated || itemId <= 0) return null;
@@ -24,13 +26,13 @@ export default function FeedbackButtons({ searchId, itemId }: Props) {
   }
 
   return (
-    <div className="mt-3 flex items-center gap-2" role="group" aria-label="Rate this match">
-      <span className="text-[0.75rem] text-faint">Good match?</span>
+    <div className="mt-3 flex items-center gap-2" role="group" aria-label={t("feedback.rateAria")}>
+      <span className="text-[0.75rem] text-faint">{t("feedback.good")}</span>
       <button
         type="button"
         onClick={() => cast(1)}
         aria-pressed={vote === 1}
-        aria-label="Good match"
+        aria-label={t("feedback.goodAria")}
         className={cn(
           "flex size-8 items-center justify-center rounded-full border transition-colors",
           vote === 1
@@ -44,7 +46,7 @@ export default function FeedbackButtons({ searchId, itemId }: Props) {
         type="button"
         onClick={() => cast(-1)}
         aria-pressed={vote === -1}
-        aria-label="Bad match"
+        aria-label={t("feedback.badAria")}
         className={cn(
           "flex size-8 items-center justify-center rounded-full border transition-colors",
           vote === -1

@@ -1,16 +1,19 @@
 import { animate, m, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useI18n } from "../i18n/LanguageContext";
 
 /** Confidence as an aperture dial: a ring that fills toward focus as certainty
  *  rises, colour shifting cold → warm amber, with a spring count-up. Hero only. */
 export default function ConfidenceDial({ value }: { value: number }) {
+  const { t } = useI18n();
   const pct = Math.max(0, Math.min(100, Math.round(value)));
   const reduce = useReducedMotion();
   const [shown, setShown] = useState(reduce ? pct : 0);
 
   const color =
     pct >= 75 ? "var(--color-amber)" : pct >= 45 ? "var(--color-violet-soft)" : "var(--color-faint)";
-  const label = pct >= 75 ? "in focus" : pct >= 45 ? "coming into focus" : "still fuzzy";
+  const label =
+    pct >= 75 ? t("confidence.inFocus") : pct >= 45 ? t("confidence.coming") : t("confidence.fuzzy");
 
   const r = 52;
   const circ = 2 * Math.PI * r;
@@ -36,7 +39,7 @@ export default function ConfidenceDial({ value }: { value: number }) {
       aria-valuenow={pct}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label={`Confidence ${pct} percent`}
+      aria-label={t("confidence.ariaValue", { pct })}
     >
       <svg viewBox="0 0 120 120" width="120" height="120" style={{ filter: `drop-shadow(0 0 8px ${color})` }}>
         <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={8} />

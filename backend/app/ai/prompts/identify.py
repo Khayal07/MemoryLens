@@ -46,5 +46,7 @@ rejected, if any>"
 }}"""
 
 
-def build_user_prompt(category_display: str, query: str) -> str:
-    return f"CATEGORY: {category_display}\nMEMORY: {query}"
+def build_user_prompt(category_display: str, query: str, language: str | None = None) -> str:
+    from app.ai.prompts.language import language_directive
+
+    return f"CATEGORY: {category_display}\nMEMORY: {query}{language_directive(language)}"

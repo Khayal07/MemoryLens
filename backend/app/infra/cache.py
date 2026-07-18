@@ -15,17 +15,21 @@ log = structlog.get_logger()
 TTL_SECONDS = 600
 
 
-def _key(category: str, query: str) -> str:
+def _key(category: str, query: str, language: str | None = None) -> str:
     norm = clean_query(query).lower()
     digest = hashlib.sha256(norm.encode("utf-8")).hexdigest()[:24]
-    return f"search:{category}:{digest}"
+    # The answer language is part of the identity: the same memory answered in AZ vs EN
+    # is a different cached response. `auto` (None) keeps the old key so pre-existing
+    # entries don't need invalidating.
+    lang = language or "auto"
+    return f"search:{category}:{lang}:{digest}"
 
 
-def get_cached(category: str, query: str) -> SearchResponse | None:
+def get_cached(category: str, query: str, language: str | None = None) -> SearchResponse | None:
     if redis_unavailable():
         return None
     try:
-        raw = get_redis().get(_key(category, query))
+        raw = get_redis().get(_key(category, query, language))
     except redis.RedisError as exc:
         note_redis_failure()
         log.warning("cache.read_failed", error=str(exc))
@@ -35,11 +39,15 @@ def get_cached(category: str, query: str) -> SearchResponse | None:
     return SearchResponse.model_validate_json(raw)
 
 
-def set_cached(category: str, query: str, response: SearchResponse) -> None:
+def set_cached(
+    category: str, query: str, response: SearchResponse, language: str | None = None
+) -> None:
     if redis_unavailable():
         return
     try:
-        get_redis().set(_key(category, query), response.model_dump_json(), ex=TTL_SECONDS)
+        get_redis().set(
+            _key(category, query, language), response.model_dump_json(), ex=TTL_SECONDS
+        )
     except redis.RedisError as exc:
         note_redis_failure()
         log.warning("cache.write_failed", error=str(exc))

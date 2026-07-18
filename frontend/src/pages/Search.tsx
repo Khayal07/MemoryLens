@@ -15,20 +15,16 @@ import Eyebrow from "../components/ui/Eyebrow";
 import Skeleton from "../components/ui/Skeleton";
 import Alert from "../components/ui/Alert";
 import { fadeUp, stagger } from "../components/motion/variants";
+import { categoryName, useI18n } from "../i18n/LanguageContext";
 import { api, ApiError } from "../lib/api";
-
-const EXAMPLES: Record<string, string[]> = {
-  movies: ["Twelve people arguing in one room over a verdict", "A man plants an idea inside a dream"],
-  tv: ["A chemistry teacher starts cooking drugs", "Kids and a monster from another dimension"],
-  songs: ["A man singing about walking in the rain", "An operatic rock song about killing a man"],
-  books: ["A hobbit, a dragon, and a stolen treasure", "A boy finds a dragon egg and learns magic"],
-  games: ["A blue hedgehog collecting rings at high speed", "A hero with a sword saving a princess in an open world"],
-  actors: ["He always plays mafia and crime bosses", "The actor from Titanic and Inception"],
-};
 
 export default function Search() {
   const { category = "" } = useParams();
   const navigate = useNavigate();
+  const { t, lang } = useI18n();
+  const examples = [t(`search.ex.${category}.1`), t(`search.ex.${category}.2`)].filter(
+    (e) => !e.startsWith("search.ex."),
+  );
   const [query, setQuery] = useState("");
   // Fragment mode: the memory is entered as separate shards, searched as one query.
   const [fragmentsMode, setFragmentsMode] = useState(false);
@@ -37,13 +33,14 @@ export default function Search() {
 
   const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: api.categories });
   const current = categories?.find((c) => c.key === category);
+  const currentName = categoryName(t, category, current?.display_name);
 
   // Akinator mode: the backend attaches one clarifying question to a weak search;
   // answers are folded into re-searches client-side (stateless backend), max 2 rounds.
   const [baseQuery, setBaseQuery] = useState("");
   const [clarifyLog, setClarifyLog] = useState<{ q: string; a: string }[]>([]);
 
-  const mutation = useMutation({ mutationFn: (q: string) => api.search(category, q) });
+  const mutation = useMutation({ mutationFn: (q: string) => api.search(category, q, lang) });
 
   function submit(text: string) {
     const q = text.trim().slice(0, 1000);
@@ -89,13 +86,13 @@ export default function Search() {
       <div className="mb-[22px] flex items-center justify-between gap-3">
         <span className="glass inline-flex items-center gap-2 rounded-full px-3.5 py-[7px] text-[0.9rem] font-semibold">
           <span aria-hidden="true">{current?.icon ?? "🔎"}</span>
-          {current?.display_name ?? category}
+          {currentName}
         </span>
         <Link
           to="/"
           className="rounded-[10px] px-3 py-2 text-[0.92rem] font-medium text-muted transition-colors hover:bg-raised hover:text-ink"
         >
-          ← All categories
+          {t("search.allCategories")}
         </Link>
       </div>
 
@@ -115,7 +112,7 @@ export default function Search() {
             draft={draft}
             onDraftChange={setDraft}
             isPending={mutation.isPending}
-            placeholder="Drop the first fragment you remember…"
+            placeholder={t("search.fragmentPlaceholder")}
           />
         ) : (
           <textarea
@@ -128,8 +125,8 @@ export default function Search() {
                 submit(query);
               }
             }}
-            placeholder={`Describe the ${current?.display_name?.toLowerCase() ?? ""} you half-remember…`}
-            aria-label="Describe what you remember"
+            placeholder={t("search.placeholder", { category: currentName.toLowerCase() })}
+            aria-label={t("search.ariaDescribe")}
             className="max-h-40 min-h-7 flex-1 resize-none bg-transparent px-3 py-3 text-[1.05rem] leading-[1.45] text-ink outline-none placeholder:text-faint"
           />
         )}
@@ -140,8 +137,8 @@ export default function Search() {
             type="button"
             onClick={toggleMode}
             aria-pressed={fragmentsMode}
-            aria-label={fragmentsMode ? "Switch to free text" : "Switch to fragment mode"}
-            title={fragmentsMode ? "Free text" : "Fragments"}
+            aria-label={fragmentsMode ? t("search.toFreeText") : t("search.toFragment")}
+            title={fragmentsMode ? t("search.freeTextTitle") : t("search.fragmentsTitle")}
             className={`flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full border transition-all ${
               fragmentsMode
                 ? "border-violet/60 bg-violet/15 text-violet-soft shadow-glow"
@@ -158,7 +155,7 @@ export default function Search() {
             onChange={fragmentsMode ? setDraft : setQuery}
           />
           <Button type="submit" disabled={mutation.isPending} className="self-stretch">
-            {mutation.isPending ? "Focusing…" : "Recall"}
+            {mutation.isPending ? t("search.focusing") : t("search.recall")}
           </Button>
         </div>
       </form>
@@ -166,9 +163,7 @@ export default function Search() {
       {!response && !mutation.isPending && (
         <>
           <p className="mt-3 text-[0.85rem] text-faint">
-            {fragmentsMode
-              ? "Enter adds a fragment · Recall searches them all together"
-              : "Press Enter to search · Shift+Enter for a new line"}
+            {fragmentsMode ? t("search.hintFragments") : t("search.hintText")}
           </p>
           <m.div
             className="mt-3.5 flex flex-wrap gap-2"
@@ -176,7 +171,7 @@ export default function Search() {
             initial="hidden"
             animate="show"
           >
-            {(EXAMPLES[category] ?? []).map((ex) => (
+            {examples.map((ex) => (
               <m.button
                 key={ex}
                 variants={fadeUp}
@@ -245,15 +240,15 @@ export default function Search() {
 
       {response && response.results.length === 0 && (
         <EmptyState
-          title={`Nothing matched in ${current?.display_name ?? category}.`}
-          hint="Try more details — a scene, a character, a feeling."
+          title={t("search.nothingMatched", { category: currentName })}
+          hint={t("search.nothingHint")}
         />
       )}
 
       {response && response.results.length > 0 && (
         <div key={response.query}>
           <div className="mb-4 mt-8 flex items-center justify-between gap-3">
-            <Eyebrow>Best match</Eyebrow>
+            <Eyebrow>{t("search.bestMatch")}</Eyebrow>
             <ShareButton searchId={response.search_id} />
           </div>
           <m.div variants={stagger()} initial="hidden" animate="show">
@@ -268,7 +263,7 @@ export default function Search() {
           {response.results.length > 1 && (
             <>
               <div className="mb-4 mt-8">
-                <Eyebrow>Other possibilities</Eyebrow>
+                <Eyebrow>{t("search.otherPossibilities")}</Eyebrow>
               </div>
               <m.div
                 className="grid grid-cols-1 gap-3.5 sm:grid-cols-2"

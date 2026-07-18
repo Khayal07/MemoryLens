@@ -22,6 +22,7 @@ from app.ai.identify import IdentifyParseError, parse_identification
 from app.ai.llm import LLMClient, LLMError
 from app.ai.matching import same_title, slug
 from app.ai.prompts import clarify, hyde, identify, song_guess, translate
+from app.ai.prompts.language import normalize_language
 from app.ai.prompts.reasoning import SYSTEM_PROMPT, build_user_prompt
 from app.ai.reasoning import LLMReasoning, ReasoningParseError, parse_reasoning
 from app.ai.song_guess import SongGuessParseError, parse_song_guess
@@ -74,16 +75,25 @@ _ROLE_WORDS = {
 }
 
 
-def _is_language_slip(text: str | None, query: str) -> bool:
-    """True when an LLM reply drifted to a different language than the memory — a nano
-    slip we scrub so the UI never shows a foreign explanation. Two cases:
-    - Cyrillic reply to a non-Cyrillic memory (a genuine Russian query keeps Russian).
-    - Non-ASCII reply (e.g. Portuguese "é uma série") to a plain-English (ASCII) memory;
-      an in-language answer to a non-ASCII memory (Azerbaijani, etc.) is left untouched."""
+def _is_language_slip(text: str | None, query: str, language: str | None = None) -> bool:
+    """True when an LLM reply drifted to a language we didn't want — a nano slip we scrub
+    so the UI never shows a foreign explanation.
+
+    `language` is the user's forced answer language (`az`/`en`), or None to auto-detect
+    from the memory. Cyrillic is never wanted (we only target Latin-script EN/AZ) and is
+    always scrubbed. Otherwise:
+    - forced `az`: an Azerbaijani (non-ASCII) reply is intended → never a slip.
+    - forced `en`: a non-ASCII reply is a slip → scrub.
+    - auto (None): a non-ASCII reply to a plain-English (ASCII) memory is a slip; an
+      in-language answer to a non-ASCII memory (Azerbaijani, etc.) is left untouched."""
     if not text:
         return False
     if _CYRILLIC.search(text) and not _CYRILLIC.search(query):
         return True
+    if language == "az":
+        return False
+    if language == "en":
+        return not text.isascii()
     if query.isascii() and not text.isascii():
         return True
     return False
@@ -153,10 +163,18 @@ class SearchPipeline:
         self.song_identify_model = song_identify_model or None
 
     def run(
-        self, db: Session, category_key: str, query: str, max_results: int = 5
+        self,
+        db: Session,
+        category_key: str,
+        query: str,
+        max_results: int = 5,
+        language: str | None = None,
     ) -> SearchResponse:
         validate_query(query)
         cleaned = clean_query(query)
+        # An explicit UI language forces every explanation into that language; None keeps
+        # the default "answer in the memory's language" behaviour.
+        language = normalize_language(language)
         category = self._resolve_category(db, category_key)
 
         # English key for the local (English-only) retrieval + rerank models; the
@@ -181,12 +199,12 @@ class SearchPipeline:
 
         if not candidates:
             # Nothing in the catalog resembled the memory — let the LLM name it.
-            results = self._maybe_add_freeform(db, category, cleaned, [], max_results)
+            results = self._maybe_add_freeform(db, category, cleaned, [], max_results, language=language)
             return SearchResponse(
                 query=query,
                 category=category_key,
                 results=results,
-                clarifying_question=self._maybe_clarify(category, cleaned, results),
+                clarifying_question=self._maybe_clarify(category, cleaned, results, language),
             )
 
         reranked = self.reranker.rerank(retrieval_query, candidates, top_n=self.rerank_top_n)
@@ -195,12 +213,14 @@ class SearchPipeline:
         # of back-to-back — this is the bulk of a search's wall-clock time. Each result is
         # then GATED exactly as before, so speculative calls that turn out unneeded are
         # simply discarded (they never reach the user).
-        reasoning, ident, question = self._reason_identify_clarify(category, cleaned, reranked)
+        reasoning, ident, question = self._reason_identify_clarify(
+            category, cleaned, reranked, language
+        )
         results, suggestion = self._build_results(
-            category_key, cleaned, reranked, reasoning, max_results
+            category_key, cleaned, reranked, reasoning, max_results, language
         )
         results = self._maybe_add_freeform(
-            db, category, cleaned, results, max_results, precomputed_ident=ident
+            db, category, cleaned, results, max_results, precomputed_ident=ident, language=language
         )
         # Akinator: judged on the FINAL results (free-form hero included) — the question
         # was pre-computed above but is only surfaced while the answer is still unsettled.
@@ -213,21 +233,25 @@ class SearchPipeline:
             clarifying_question=clarifying_question,
         )
 
-    def _reason_identify_clarify(self, category, query, reranked):
+    def _reason_identify_clarify(self, category, query, reranked, language=None):
         """Fan the three independent LLM calls out across threads and join. The LLM client
         is stateless (each call opens its own httpx client), so concurrent calls are safe;
         crucially NO database work happens here — DB writes (materialize) stay on the main
         thread in _build_freeform_item. A disabled feature simply isn't submitted."""
         with ThreadPoolExecutor(max_workers=3) as ex:
-            reason_fut = ex.submit(self._reason, category, query, reranked)
+            reason_fut = ex.submit(self._reason, category, query, reranked, language)
             ident_fut = (
-                ex.submit(self._identify_llm, category, query)
+                ex.submit(self._identify_llm, category, query, language)
                 if self.freeform_enabled
                 else None
             )
             clarify_fut = (
                 ex.submit(
-                    self._clarify_question, category, query, [c.title for c in reranked[:5]]
+                    self._clarify_question,
+                    category,
+                    query,
+                    [c.title for c in reranked[:5]],
+                    language,
                 )
                 if self.clarify_enabled
                 else None
@@ -304,11 +328,13 @@ class SearchPipeline:
         return category
 
     def _reason(
-        self, category: Category, query: str, candidates: list[Candidate]
+        self, category: Category, query: str, candidates: list[Candidate], language=None
     ) -> LLMReasoning | None:
         """Call the LLM and parse strict JSON; retry once with a repair hint, then
         give up (the pipeline falls back to rerank order)."""
-        user = build_user_prompt(category.display_name, sorted(CATEGORY_KEYS), query, candidates)
+        user = build_user_prompt(
+            category.display_name, sorted(CATEGORY_KEYS), query, candidates, language
+        )
         for attempt in range(2):
             try:
                 raw = self.llm.complete_json(
@@ -323,7 +349,7 @@ class SearchPipeline:
         return None
 
     def _maybe_clarify(
-        self, category, query: str, results: list[ResultItem]
+        self, category, query: str, results: list[ResultItem], language=None
     ) -> str | None:
         """Akinator mode: when the final answer is still uncertain, ask the LLM for ONE
         clarifying question the user can answer to refine the search. Sequential variant
@@ -331,7 +357,7 @@ class SearchPipeline:
         in parallel and gates it with `_should_clarify`."""
         if not self.clarify_enabled or not self._should_clarify(results):
             return None
-        return self._clarify_question(category, query, [r.title for r in results[:5]])
+        return self._clarify_question(category, query, [r.title for r in results[:5]], language)
 
     def _should_clarify(self, results: list[ResultItem]) -> bool:
         """Whether the answer is still unsettled enough to warrant one question. Certainty
@@ -350,17 +376,17 @@ class SearchPipeline:
             return not (grounded is not None and _same_title(best.title, grounded.title))
         return best.confidence < self.clarify_floor
 
-    def _clarify_question(self, category, query: str, titles: list[str]) -> str | None:
+    def _clarify_question(self, category, query: str, titles: list[str], language=None) -> str | None:
         """The LLM half of clarify: write ONE question given the candidate titles. Best-
         effort — any LLM failure, an empty question, or a language slip drops the feature."""
         try:
             system = clarify.SYSTEM_PROMPT.format(category=category.display_name)
-            user = clarify.build_user_prompt(category.display_name, query, titles)
+            user = clarify.build_user_prompt(category.display_name, query, titles, language)
             question = parse_clarification(self.llm.complete_json(system, user)).question.strip()
         except (LLMError, ClarifyParseError) as exc:
             log.warning("pipeline.clarify_failed", error=str(exc))
             return None
-        if not question or _is_language_slip(question, query):
+        if not question or _is_language_slip(question, query, language):
             return None
         return question
 
@@ -372,6 +398,7 @@ class SearchPipeline:
         results: list[ResultItem],
         max_results: int,
         precomputed_ident=_UNSET,
+        language=None,
     ) -> list[ResultItem]:
         """When the grounded catalog gives no confident match, ask the LLM to name the
         real item from its own knowledge and promote that answer to the top. The weak
@@ -384,11 +411,11 @@ class SearchPipeline:
         if top >= self.freeform_confidence_floor + self.freeform_grey_margin:
             return results  # confident grounded match — trust the catalog, skip the LLM
         ident = (
-            self._identify_llm(category, query)
+            self._identify_llm(category, query, language)
             if precomputed_ident is _UNSET
             else precomputed_ident
         )
-        item = self._build_freeform_item(db, category, query, ident)
+        item = self._build_freeform_item(db, category, query, ident, language)
         if item is None:
             return results
         # If the AI names a title the catalog ALREADY retrieved, never show both — that
@@ -419,13 +446,13 @@ class SearchPipeline:
         agreed.confidence_note = agreed.confidence_note or item.confidence_note
         return [agreed, *(r for i, r in enumerate(results) if i != idx)]
 
-    def _identify_llm(self, category, query: str):
+    def _identify_llm(self, category, query: str, language=None):
         """The network-only half of free-form identification: ask the LLM to name the most
         likely real title and parse it. NO database or image I/O here, so it is safe to run
         on a worker thread. Returns the parsed identification, or None on any failure."""
         try:
             system = identify.SYSTEM_PROMPT.format(category=category.display_name)
-            user = identify.build_user_prompt(category.display_name, query)
+            user = identify.build_user_prompt(category.display_name, query, language)
             # Songs need the stronger model to resolve a lyric to the right song; other
             # categories stay on the fast default so latency isn't paid everywhere.
             model = self.song_identify_model if category.key in _SONG_KEYS else None
@@ -434,12 +461,14 @@ class SearchPipeline:
             log.warning("pipeline.identify_failed", error=str(exc))
             return None
 
-    def _identify_freeform(self, db: Session, category, query: str) -> ResultItem | None:
+    def _identify_freeform(self, db: Session, category, query: str, language=None) -> ResultItem | None:
         """Ungrounded identification (LLM name → materialized catalog row). Thin wrapper
         kept for direct callers/tests: identify then build."""
-        return self._build_freeform_item(db, category, query, self._identify_llm(category, query))
+        return self._build_freeform_item(
+            db, category, query, self._identify_llm(category, query, language), language
+        )
 
-    def _build_freeform_item(self, db: Session, category, query: str, ident) -> ResultItem | None:
+    def _build_freeform_item(self, db: Session, category, query: str, ident, language=None) -> ResultItem | None:
         """Turn a parsed identification into a saveable result: fetch cover art, materialize
         a lightweight catalog row (no embedding, so it stays out of retrieval) for a real
         item_id the UI can save/vote on, and build the ResultItem. Runs on the main thread
@@ -454,7 +483,7 @@ class SearchPipeline:
         # Prefer the rich catalog-style description so the hero card is at least as
         # informative as a grounded one; a language slip falls back to the terse tag.
         description = ident.description.strip()
-        if not description or _is_language_slip(description, query):
+        if not description or _is_language_slip(description, query, language):
             description = ident.detail or "Identified from world knowledge — not in the catalog."
         # The free-form hero has no catalog poster; give the prominent Best Match a real
         # image so it isn't a blank frame, from the right source per category. Best-effort.
@@ -471,10 +500,10 @@ class SearchPipeline:
         elif category.key in _GAME_KEYS:
             image_url = fetch_game_image(title)  # RAWG key art
         reason = ident.reason or None
-        if _is_language_slip(reason, query):
+        if _is_language_slip(reason, query, language):
             reason = None
         confidence_note = ident.confidence_reason.strip() or None
-        if _is_language_slip(confidence_note, query):
+        if _is_language_slip(confidence_note, query, language):
             confidence_note = None  # breakdown panel falls back to its static text
 
         metadata = {"source": "gpt-knowledge", "detail": ident.detail}
@@ -551,6 +580,7 @@ class SearchPipeline:
         reranked: list[Candidate],
         reasoning: LLMReasoning | None,
         max_results: int,
+        language=None,
     ) -> tuple[list[ResultItem], MismatchSuggestion | None]:
         by_id = {c.item_id: c for c in reranked}
         max_retrieval = max((c.retrieval_score for c in reranked), default=0.0)
@@ -561,11 +591,14 @@ class SearchPipeline:
                 cand = by_id.get(match.item_id)
                 if cand is None:
                     continue  # ignore any id the model invented
-                reason = None if _is_language_slip(match.reason, query) else match.reason
-                if not (reason and reason.strip()) and query.isascii():
+                reason = None if _is_language_slip(match.reason, query, language) else match.reason
+                if not (reason and reason.strip()) and (
+                    language == "en" or (language is None and query.isascii())
+                ):
                     # nano sometimes omits the reason for an obvious match (e.g. an
-                    # actor). Show a neutral English line rather than a blank one; a
-                    # non-ASCII (in-language) memory is left as-is to avoid a language mix.
+                    # actor). Show a neutral English line rather than a blank one — but
+                    # only when the answer language is English; for a forced-AZ (or
+                    # in-language non-ASCII) answer, leave it blank to avoid a language mix.
                     reason = _FALLBACK_REASON
                 results.append(
                     self._to_result(
@@ -596,7 +629,9 @@ class SearchPipeline:
                     )
                 )
 
-        return results[:max_results], self._validate_mismatch(category_key, query, reasoning)
+        return results[:max_results], self._validate_mismatch(
+            category_key, query, reasoning, language
+        )
 
     @staticmethod
     def _to_result(
@@ -619,7 +654,7 @@ class SearchPipeline:
 
     @staticmethod
     def _validate_mismatch(
-        category_key: str, query: str, reasoning: LLMReasoning | None
+        category_key: str, query: str, reasoning: LLMReasoning | None, language=None
     ) -> MismatchSuggestion | None:
         if not reasoning or not reasoning.category_mismatch:
             return None
@@ -627,7 +662,7 @@ class SearchPipeline:
         if suspected not in CATEGORY_KEYS or suspected == category_key:
             return None
         message = reasoning.category_mismatch.message
-        if _is_language_slip(message, query):
+        if _is_language_slip(message, query, language):
             message = ""  # frontend banner falls back to a neutral template
         return MismatchSuggestion(suspected_category=suspected, message=message)
 

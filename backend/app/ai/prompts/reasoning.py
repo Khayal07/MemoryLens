@@ -2,6 +2,7 @@
 among grounded candidates — it must never invent an item_id — which keeps results
 truthful even with a weaker/free model."""
 
+from app.ai.prompts.language import language_directive
 from app.ai.types import Candidate
 
 PROMPT_VERSION = "reasoning_v3"
@@ -48,6 +49,7 @@ def build_user_prompt(
     category_keys: list[str],
     query: str,
     candidates: list[Candidate],
+    language: str | None = None,
 ) -> str:
     lines = [
         f"CATEGORY: {category_display}",
@@ -61,8 +63,13 @@ def build_user_prompt(
         suffix = f" ({meta})" if meta else ""
         lines.append(f"- item_id={c.item_id}: {c.title}{suffix} — {c.description}")
     lines.append("")
+    directive = language_directive(language)
     lines.append(
-        "REMINDER: write every `reason` and mismatch `message` in the SAME language as "
-        "the MEMORY above. Keep titles unchanged."
+        directive.strip()
+        if directive
+        else (
+            "REMINDER: write every `reason` and mismatch `message` in the SAME language as "
+            "the MEMORY above. Keep titles unchanged."
+        )
     )
     return "\n".join(lines)

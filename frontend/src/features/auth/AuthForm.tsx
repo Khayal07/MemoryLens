@@ -4,6 +4,7 @@ import Alert from "../../components/ui/Alert";
 import Button from "../../components/ui/Button";
 import Field from "../../components/ui/Field";
 import { developIn } from "../../components/motion/variants";
+import { useI18n } from "../../i18n/LanguageContext";
 
 interface Props {
   title: string;
@@ -29,6 +30,7 @@ export default function AuthForm({
   onSubmit,
   validate,
 }: Props) {
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export default function AuthForm({
     try {
       await onSubmit(email, password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : t("common.genericError"));
     } finally {
       setBusy(false);
     }
@@ -66,7 +68,7 @@ export default function AuthForm({
       {error && <Alert>{error}</Alert>}
 
       <Field
-        label="Email"
+        label={t("auth.field.email")}
         type="email"
         autoComplete="email"
         value={email}
@@ -74,7 +76,7 @@ export default function AuthForm({
         required
       />
       <Field
-        label="Password"
+        label={t("auth.field.password")}
         type="password"
         autoComplete={passwordAutoComplete}
         value={password}

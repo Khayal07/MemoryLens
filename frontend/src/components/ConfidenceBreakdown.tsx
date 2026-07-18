@@ -1,32 +1,14 @@
 import { m } from "framer-motion";
+import { useI18n } from "../i18n/LanguageContext";
 
-/** Display order, colour, label, and a plain-words explanation per signal key. */
-const SIGNALS: Record<string, { label: string; color: string; desc: string }> = {
-  llm: {
-    label: "AI judgement",
-    color: "var(--color-violet-soft)",
-    desc: "How strongly the AI rates this item as the match for your memory.",
-  },
-  rerank: {
-    label: "Relevance match",
-    color: "var(--color-amber)",
-    desc: "A cross-checking model compares your words against this item's description.",
-  },
-  retrieval: {
-    label: "Catalog retrieval",
-    color: "#67d4e0",
-    desc: "How high this item surfaced when searching the catalog itself.",
-  },
-  feedback: {
-    label: "Community votes",
-    color: "#7ce08a",
-    desc: "Thumbs up/down from users nudge the score over time.",
-  },
-  ai_knowledge: {
-    label: "AI world knowledge",
-    color: "var(--color-amber)",
-    desc: "This answer isn't in our catalog — the AI named it from its own knowledge of the real world. Because we can't verify it against catalog data, confidence is capped at 90%.",
-  },
+/** Display order + colour per signal key; label and plain-words description come from
+ *  the i18n dictionary (breakdown.<key>.label / .desc). */
+const SIGNAL_COLORS: Record<string, string> = {
+  llm: "var(--color-violet-soft)",
+  rerank: "var(--color-amber)",
+  retrieval: "#67d4e0",
+  feedback: "#7ce08a",
+  ai_knowledge: "var(--color-amber)",
 };
 const NEGATIVE_COLOR = "#e07c7c";
 
@@ -41,14 +23,16 @@ interface Props {
  *  contribution (percentage points of the final number), each explained in plain
  *  words. Expanded from the hero's ConfidenceDial. */
 export default function ConfidenceBreakdown({ breakdown, note }: Props) {
-  const entries = Object.keys(SIGNALS)
+  const { t } = useI18n();
+  const entries = Object.keys(SIGNAL_COLORS)
     .filter((k) => breakdown[k] !== undefined)
     .map((k) => ({
       key: k,
       value: breakdown[k],
-      ...SIGNALS[k],
+      color: SIGNAL_COLORS[k],
+      label: t(`breakdown.${k}.label`),
       // The AI's own explanation beats the canned one when it gave us one.
-      desc: k === "ai_knowledge" && note ? note : SIGNALS[k].desc,
+      desc: k === "ai_knowledge" && note ? note : t(`breakdown.${k}.desc`),
     }));
   if (entries.length === 0) return null;
 
@@ -60,8 +44,8 @@ export default function ConfidenceBreakdown({ breakdown, note }: Props) {
     <div className="mt-3 rounded-xl border border-glass-line bg-white/[0.03] p-3.5">
       <p className="mb-3 text-[0.82rem] text-muted">
         {entries.length > 1
-          ? `The ${total}% is the sum of ${entries.length} independent signals — no single one can dominate:`
-          : `Where this ${total}% comes from:`}
+          ? t("breakdown.sumMany", { total, n: entries.length })
+          : t("breakdown.sumOne", { total })}
       </p>
 
       <div className="flex items-center gap-4">

@@ -6,6 +6,7 @@ import Button from "../components/ui/Button";
 import Eyebrow from "../components/ui/Eyebrow";
 import Skeleton from "../components/ui/Skeleton";
 import { photoDevelop, stagger } from "../components/motion/variants";
+import { useI18n } from "../i18n/LanguageContext";
 import { api, ApiError } from "../lib/api";
 import type { ChallengeState } from "../lib/types";
 
@@ -28,6 +29,7 @@ function emojiGrid(s: ChallengeState): string {
 
 export default function Challenge() {
   const qc = useQueryClient();
+  const { t } = useI18n();
   const { data, isLoading, error } = useQuery({
     queryKey: ["challenge"],
     queryFn: api.challengeToday,
@@ -68,7 +70,7 @@ export default function Challenge() {
     );
   }
   if (error || !data) {
-    return <Alert>{(error as ApiError | null)?.message ?? "Challenge unavailable."}</Alert>;
+    return <Alert>{(error as ApiError | null)?.message ?? t("challenge.unavailable")}</Alert>;
   }
 
   const lockedCount = data.clues_total - data.clues.length;
@@ -76,13 +78,13 @@ export default function Challenge() {
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <Eyebrow>Daily challenge #{data.number}</Eyebrow>
+        <Eyebrow>{t("challenge.daily", { n: data.number })}</Eyebrow>
         <span className="glass rounded-full px-3 py-1.5 text-[0.82rem] text-muted">
-          Category: <span className="text-ink">{data.category}</span>
+          {t("challenge.category")} <span className="text-ink">{data.category}</span>
         </span>
       </div>
       <h1 className="mb-6 font-display text-[1.5rem] font-bold tracking-[-0.02em]">
-        Guess today's secret from the clues.
+        {t("challenge.title")}
       </h1>
 
       <m.div
@@ -108,14 +110,14 @@ export default function Challenge() {
           <div
             key={`locked-${i}`}
             className="glass flex items-center gap-3 rounded-2xl p-4 opacity-45"
-            aria-label="Locked clue"
+            aria-label={t("challenge.lockedAria")}
           >
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full
               border border-glass-line text-[0.8rem]">
               🔒
             </span>
             <span className="text-[0.9rem] text-faint">
-              A wrong guess reveals the next clue.
+              {t("challenge.locked")}
             </span>
           </div>
         ))}
@@ -137,13 +139,15 @@ export default function Challenge() {
             autoFocus
             value={guess}
             onChange={(e) => setGuess(e.target.value)}
-            placeholder={`Your guess — a ${data.category} title…`}
-            aria-label="Your guess"
+            placeholder={t("challenge.guessPlaceholder", { category: data.category })}
+            aria-label={t("challenge.guessAria")}
             className="min-w-0 flex-1 bg-transparent px-3 py-3 text-[1.05rem] text-ink
               outline-none placeholder:text-faint"
           />
           <Button type="submit" disabled={mutation.isPending || !guess.trim()}>
-            {mutation.isPending ? "Checking…" : `Guess ${data.guesses_used + 1}/${data.guess_limit}`}
+            {mutation.isPending
+              ? t("challenge.checking")
+              : t("challenge.guessN", { n: data.guesses_used + 1, limit: data.guess_limit })}
           </Button>
         </m.form>
       )}
@@ -156,7 +160,7 @@ export default function Challenge() {
             exit={{ opacity: 0 }}
             className="mt-3 text-[0.92rem] text-amber"
           >
-            Not it — a new clue just flipped in.
+            {t("challenge.notIt")}
           </m.p>
         )}
       </AnimatePresence>
@@ -170,7 +174,7 @@ export default function Challenge() {
             data.solved ? "ring-violet/40 shadow-glow" : "ring-amber/40 shadow-glow-amber"
           }`}
         >
-          <Eyebrow>{data.solved ? `Solved in ${data.guesses_used}/${data.guess_limit}` : "Out of guesses"}</Eyebrow>
+          <Eyebrow>{data.solved ? t("challenge.solvedIn", { n: data.guesses_used, limit: data.guess_limit }) : t("challenge.outOfGuesses")}</Eyebrow>
           <div className="mt-4 flex flex-col gap-5 sm:flex-row">
             {data.answer.image_url && (
               <m.img
@@ -187,9 +191,7 @@ export default function Challenge() {
                 {data.answer.title}
               </h2>
               <p className="mt-2 text-[0.95rem] text-muted">
-                {data.solved
-                  ? "Sharp recall — the aperture snapped right into focus."
-                  : "It slipped away today. Tomorrow brings a fresh secret."}
+                {data.solved ? t("challenge.solvedMsg") : t("challenge.failedMsg")}
               </p>
               <div className="mt-4 flex flex-wrap items-center gap-2.5">
                 <button
@@ -197,7 +199,7 @@ export default function Challenge() {
                   className="glass rounded-full px-4 py-2 text-[0.9rem] font-semibold
                     transition-colors hover:border-violet/60"
                 >
-                  {copied ? "Copied ✓" : "Share result"}
+                  {copied ? t("challenge.copied") : t("challenge.shareResult")}
                 </button>
                 <span className="text-[0.95rem]">{emojiGrid(data)}</span>
                 {data.answer.source_url && (
@@ -207,7 +209,7 @@ export default function Challenge() {
                     rel="noreferrer"
                     className="text-[0.9rem] text-violet-soft underline-offset-4 hover:underline"
                   >
-                    View source ↗
+                    {t("common.viewSource")}
                   </a>
                 )}
               </div>

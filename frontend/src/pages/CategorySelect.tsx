@@ -6,19 +6,12 @@ import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import TiltCard from "../components/motion/TiltCard";
 import { developIn, stagger } from "../components/motion/variants";
+import { categoryName, useI18n } from "../i18n/LanguageContext";
 import { api } from "../lib/api";
-
-const DESC: Record<string, string> = {
-  movies: "A scene, a single room, a face you can't place",
-  tv: "That show with the thing that happened",
-  songs: "A lyric, a mood, rain on the chorus",
-  books: "Dragons, a title just out of reach",
-  games: "Yellow hair, a level you replayed for years",
-  actors: "Always the villain, never the name",
-};
 
 export default function CategorySelect() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["categories"],
     queryFn: api.categories,
@@ -29,30 +22,26 @@ export default function CategorySelect() {
       <section className="relative mb-14 pt-6 text-center">
         <m.div variants={stagger(0.08)} initial="hidden" animate="show">
           <m.div variants={developIn}>
-            <Eyebrow>Half-remembered? Start here</Eyebrow>
+            <Eyebrow>{t("category.eyebrow")}</Eyebrow>
           </m.div>
           <m.h1
             variants={developIn}
             className="my-4 font-display text-[clamp(2.6rem,7vw,4.6rem)] font-bold leading-[1.02] tracking-[-0.035em]"
           >
-            You almost have it.
+            {t("category.title1")}
             <br />
             <span className="bg-gradient-to-r from-violet-soft via-violet to-amber bg-clip-text text-transparent [text-shadow:0_0_40px_rgba(124,107,245,0.25)]">
-              Bring it into focus.
+              {t("category.title2")}
             </span>
           </m.h1>
           <m.p variants={developIn} className="mx-auto max-w-[580px] text-[1.12rem] text-muted">
-            Describe the fragment you remember — we search a real catalog and surface the
-            most likely match, with how sure we are and why.
+            {t("category.subtitle")}
           </m.p>
         </m.div>
       </section>
 
       {isError && (
-        <EmptyState
-          title="Couldn't load categories."
-          hint="Is the API running? Try refreshing in a moment."
-        />
+        <EmptyState title={t("category.errorTitle")} hint={t("category.errorHint")} />
       )}
 
       {isLoading ? (
@@ -86,10 +75,10 @@ export default function CategorySelect() {
                     {c.icon}
                   </span>
                   <div className="font-display text-[1.2rem] font-semibold tracking-[-0.01em]">
-                    {c.display_name}
+                    {categoryName(t, c.key, c.display_name)}
                   </div>
                   <div className="mt-1 text-[0.88rem] text-muted">
-                    {DESC[c.key] ?? "Search this category"}
+                    {t(`category.desc.${c.key}`) || t("category.searchThis")}
                   </div>
                 </button>
               </TiltCard>

@@ -1,18 +1,20 @@
 import { Link, useNavigate } from "react-router-dom";
 import AuthForm from "../features/auth/AuthForm";
 import { useAuth } from "../features/auth/AuthContext";
+import { useI18n } from "../i18n/LanguageContext";
 import { api, ApiError } from "../lib/api";
 
 export default function Login() {
   const { signIn } = useAuth();
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   return (
     <AuthForm
-      title="Welcome back"
-      subtitle="Sign in to keep your search history."
-      submitLabel="Sign in"
-      busyLabel="Signing in…"
+      title={t("auth.login.title")}
+      subtitle={t("auth.login.subtitle")}
+      submitLabel={t("auth.login.submit")}
+      busyLabel={t("auth.login.busy")}
       passwordAutoComplete="current-password"
       onSubmit={async (email, password) => {
         try {
@@ -20,12 +22,12 @@ export default function Login() {
           await signIn(tokens);
           navigate("/");
         } catch (err) {
-          throw new Error(err instanceof ApiError ? err.message : "Sign in failed.");
+          throw new Error(err instanceof ApiError ? err.message : t("auth.login.failed"));
         }
       }}
       footer={
         <>
-          New here? <Link to="/register">Create an account</Link>
+          {t("auth.login.footerPre")} <Link to="/register">{t("auth.login.footerLink")}</Link>
         </>
       }
     />

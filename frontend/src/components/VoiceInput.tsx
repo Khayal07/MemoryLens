@@ -1,5 +1,6 @@
 import { m, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "../i18n/LanguageContext";
 import { cn } from "../lib/cn";
 
 /* Minimal typings — lib.dom has no SpeechRecognition in this TS config. */
@@ -41,6 +42,7 @@ interface Props {
  *  az-AZ recognition silently fall back to en-US (the backend translates anyway).
  *  Self-hides when the Web Speech API is unavailable. */
 export default function VoiceInput({ value, onChange }: Props) {
+  const { t } = useI18n();
   const [listening, setListening] = useState(false);
   const [lang, setLang] = useState<"en-US" | "az-AZ">("en-US");
 
@@ -169,7 +171,9 @@ export default function VoiceInput({ value, onChange }: Props) {
         type="button"
         onClick={() => setLang((l) => (l === "en-US" ? "az-AZ" : "en-US"))}
         disabled={listening}
-        aria-label={`Speech language: ${lang === "en-US" ? "English" : "Azerbaijani"} — click to switch`}
+        aria-label={t("voice.langAria", {
+          lang: lang === "en-US" ? t("voice.english") : t("voice.azerbaijani"),
+        })}
         className="rounded-md px-1.5 py-1 font-mono text-[0.68rem] text-faint transition-colors hover:text-ink disabled:opacity-50"
       >
         {lang === "en-US" ? "EN" : "AZ"}
@@ -178,7 +182,7 @@ export default function VoiceInput({ value, onChange }: Props) {
       <button
         type="button"
         onClick={() => (listening ? stop() : start(lang))}
-        aria-label={listening ? "Stop voice input" : "Speak your memory"}
+        aria-label={listening ? t("voice.stopAria") : t("voice.speakAria")}
         aria-pressed={listening}
         className={cn(
           "relative flex h-10 w-10 items-center justify-center rounded-full border transition-all",

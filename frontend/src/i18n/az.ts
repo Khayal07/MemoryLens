@@ -71,7 +71,7 @@ export const az: Record<string, string> = {
 
   // search
   "search.allCategories": "← Bütün kateqoriyalar",
-  "search.placeholder": "Yarımçıq xatırladığın {category} təsvir et…",
+  "search.placeholder": "{category} üzrə yarımçıq xatirəni təsvir et…",
   "search.ariaDescribe": "Xatırladığını təsvir et",
   "search.fragmentPlaceholder": "Xatırladığın ilk parçanı yaz…",
   "search.hintFragments": "Enter parça əlavə edir · Xatırla hamısını birlikdə axtarır",

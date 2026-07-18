@@ -658,6 +658,12 @@ class SearchPipeline:
     ) -> MismatchSuggestion | None:
         if not reasoning or not reasoning.category_mismatch:
             return None
+        # A strong in-category match contradicts "clearly a different category" — nano
+        # sometimes rates a candidate ~0.9 yet still flags a mismatch (red-pill memory
+        # matched The Matrix 92% while suggesting "songs").
+        top_rating = max((m.rating for m in reasoning.matches), default=0.0)
+        if top_rating >= 0.85:
+            return None
         suspected = reasoning.category_mismatch.suspected_category
         if suspected not in CATEGORY_KEYS or suspected == category_key:
             return None

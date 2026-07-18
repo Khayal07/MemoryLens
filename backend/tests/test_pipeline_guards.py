@@ -65,3 +65,34 @@ def test_slug_collapses_and_trims():
 def test_slug_caps_length_and_never_empty():
     assert len(_slug("x" * 400)) <= 120
     assert _slug("!!!") == "untitled"
+
+
+def _reasoning_with_mismatch(rating: float):
+    from app.ai.reasoning import LLMMatch, LLMMismatch, LLMReasoning
+
+    return LLMReasoning(
+        matches=[LLMMatch(item_id=1, reason="fits", rating=rating)],
+        category_mismatch=LLMMismatch(
+            suspected_category="songs", message="Looks like a song."
+        ),
+    )
+
+
+def test_mismatch_suppressed_when_top_match_is_strong():
+    # nano flagged "songs" while rating The Matrix 0.95 — contradiction, drop banner.
+    from app.ai.pipeline import SearchPipeline
+
+    out = SearchPipeline._validate_mismatch(
+        "movies", "red pill hacker", _reasoning_with_mismatch(0.95)
+    )
+    assert out is None
+
+
+def test_mismatch_kept_when_matches_are_weak():
+    from app.ai.pipeline import SearchPipeline
+
+    out = SearchPipeline._validate_mismatch(
+        "movies", "a lyric about rain", _reasoning_with_mismatch(0.4)
+    )
+    assert out is not None
+    assert out.suspected_category == "songs"
